@@ -1,0 +1,26 @@
+---
+const { title = "Trackly" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    </head>
+
+  <body>
+    <header style="margin-bottom: 2rem;">
+      <nav style="display: flex; gap: 1rem;">
+        <a href="/">Dashboard</a>
+        <a href="/history">History</a>
+        <a href="/stats">Stats</a>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+  </body>

@@ -1,0 +1,10 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import StatsSummary from "../islands/StatsSummary";
+---
+
+<AppLayout title="Trackly · Stats">
+  <h1>Statistics</h1>
+
+  <StatsSummary client:load />
+</AppLayout>

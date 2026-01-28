@@ -1,0 +1,40 @@
+:root {
+  /* Base */
+  --charcoal: #565554;
+  --ocean-blue: #2e86ab;
+  --honeydew: #eff8e2;
+  --dust-grey: #cecfc7;
+
+  /* Semánticos */
+  --color-bg: var(--dust-grey);        /* fondo */
+  --color-surface: var(--honeydew);    /* cards */
+  --color-primary: var(--ocean-blue);  /* acción */
+  --color-text: var(--charcoal);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.dashboard {
+  min-height: calc(100vh - 80px);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}

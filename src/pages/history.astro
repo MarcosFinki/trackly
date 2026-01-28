@@ -1,0 +1,10 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import HistoryList from "../islands/HistoryList";
+---
+
+<AppLayout title="Trackly · History">
+  <h1>Session History</h1>
+
+  <HistoryList client:load />
+</AppLayout>
