@@ -1,0 +1,5 @@
+.session-timer {
+  font-family: monospace;
+  font-size: 1.15rem;
+  color: white;        /* 👈 clave */
+}

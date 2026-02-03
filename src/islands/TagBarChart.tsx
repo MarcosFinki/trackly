@@ -1,24 +1,29 @@
-import type { WorkSession } from "../domain/session";
+import type { SessionForStats } from "../domain/stats";
 import { getDurationByTag } from "../domain/stats";
 
 interface Props {
-  sessions: WorkSession[];
+  sessions: SessionForStats[];
 }
 
 export default function TagBarChart({ sessions }: Props) {
   const byTag = getDurationByTag(sessions);
 
-  const entries = Object.entries(byTag);
+  // convertir a minutos (float, para proporción de barras)
+  const entries = Object.entries(byTag).map(([tag, ms]) => {
+    const minutes = ms / 60000;
+    return [tag, minutes] as const;
+  });
+
   if (entries.length === 0) {
     return <p>No data yet.</p>;
   }
 
-  const max = Math.max(...entries.map(([, ms]) => ms));
+  const max = Math.max(...entries.map(([, minutes]) => minutes));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      {entries.map(([tag, ms]) => {
-        const percent = (ms / max) * 100;
+      {entries.map(([tag, minutes]) => {
+        const percent = (minutes / max) * 100;
 
         return (
           <div key={tag}>
@@ -31,7 +36,7 @@ export default function TagBarChart({ sessions }: Props) {
               }}
             >
               <span>{tag}</span>
-              <span>{formatDuration(ms)}</span>
+              <span>{formatHoursMinutes(minutes)}</span>
             </div>
 
             <div
@@ -58,9 +63,26 @@ export default function TagBarChart({ sessions }: Props) {
   );
 }
 
-function formatDuration(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  if (m > 0) return `${m}m ${s % 60}s`;
-  return `${s}s`;
+/* ---------- Helpers ---------- */
+
+/**
+ * SOLO horas y minutos.
+ * Nunca segundos.
+ * Mínimo: 1m
+ */
+function formatHoursMinutes(minutes: number): string {
+  const totalMinutes = Math.floor(minutes);
+
+  if (totalMinutes < 1) {
+    return "1m";
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+
+  if (hours > 0) {
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+
+  return `${mins}m`;
 }

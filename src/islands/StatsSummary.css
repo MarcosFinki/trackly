@@ -1,0 +1,26 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-card h3 {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.stat-card p {
+  font-size: 0.8rem;
+  margin: 0;
+}

@@ -1,46 +1,50 @@
-import type { WorkSession } from "./session";
-
-export function getFinishedSessions(
-  sessions: WorkSession[]
-): WorkSession[] {
-  return sessions.filter(
-    (s) =>
-      s.endTime !== null &&
-      typeof s.description === "string" &&
-      s.description.length > 0
-  );
+/**
+ * Minimal contract required for stats calculations
+ */
+export interface SessionForStats {
+  startTime: Date;
+  endTime: Date;
+  tags: string[];
 }
 
-export function getSessionsInLastDays(
-  sessions: WorkSession[],
+/**
+ * Filter sessions that ended in the last N days
+ * Preserves the original type (generic)
+ */
+export function getSessionsInLastDays<T extends SessionForStats>(
+  sessions: T[],
   days: number
-): WorkSession[] {
+): T[] {
   const now = Date.now();
   const limit = now - days * 24 * 60 * 60 * 1000;
 
-  return sessions.filter((s) => {
-    if (!s.endTime) return false;
-    return s.endTime.getTime() >= limit;
-  });
+  return sessions.filter(
+    (s) => s.endTime.getTime() >= limit
+  );
 }
 
+/**
+ * Total duration in milliseconds
+ */
 export function getTotalDurationMs(
-  sessions: WorkSession[]
+  sessions: SessionForStats[]
 ): number {
   return sessions.reduce((acc, s) => {
-    if (!s.endTime) return acc;
-    return acc + (s.endTime.getTime() - s.startTime.getTime());
+    const duration =
+      s.endTime.getTime() - s.startTime.getTime();
+    return acc + duration;
   }, 0);
 }
 
+/**
+ * Aggregate duration by tag
+ */
 export function getDurationByTag(
-  sessions: WorkSession[]
+  sessions: SessionForStats[]
 ): Record<string, number> {
   const result: Record<string, number> = {};
 
   sessions.forEach((session) => {
-    if (!session.endTime) return;
-
     const duration =
       session.endTime.getTime() - session.startTime.getTime();
 

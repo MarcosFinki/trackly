@@ -1,15 +1,18 @@
 :root {
-  /* Base */
   --charcoal: #565554;
   --ocean-blue: #2e86ab;
   --honeydew: #eff8e2;
   --dust-grey: #cecfc7;
 
-  /* Semánticos */
-  --color-bg: var(--dust-grey);        /* fondo */
-  --color-surface: var(--honeydew);    /* cards */
-  --color-primary: var(--ocean-blue);  /* acción */
+  --color-bg: var(--dust-grey);
+  --color-surface: var(--honeydew);
+  --color-primary: var(--ocean-blue);
   --color-text: var(--charcoal);
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
@@ -19,22 +22,52 @@ body {
   color: var(--color-text);
 }
 
-.dashboard {
-  min-height: calc(100vh - 80px);
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 2rem;
-  padding: 2rem;
+/* ---------- Global reusable animations ---------- */
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+@keyframes overlayOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+.overlay-in {
+  animation: overlayIn 180ms ease-out forwards;
+}
+
+.overlay-out {
+  animation: overlayOut 160ms ease-in forwards;
+}
+
+.modal-in {
+  animation: modalIn 200ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.modal-out {
+  animation: modalOut 160ms ease-in forwards;
 }

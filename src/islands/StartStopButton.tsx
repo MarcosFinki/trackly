@@ -1,81 +1,115 @@
-import { useState } from "react";
-import {
-  type WorkSession,
-  pauseSession,
-  resumeSession,
-  startSession,
-  finalizeSession,
-} from "../domain/session";
+import { useEffect, useState } from "react";
+import { useSession } from "../hooks/useSession";
 import SessionTimer from "./SessionTimer";
 import SessionModal from "./SessionModal";
-import { saveSession } from "../services/storage";
+import { useActiveProject } from "../hooks/useActiveProject";
+import "./StartStopButton.css";
 
 export default function StartStopButton() {
-  const [session, setSession] = useState<WorkSession | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const {
+    session,
+    loading,
+    start,
+    stop,
+    cancel,
+    finalize,
+  } = useSession();
 
-  const handleStart = () => {
-    setSession(startSession());
+  const { projectId, projectName } = useActiveProject();
+  const [feedback, setFeedback] = useState<"start" | "stop" | null>(null);
+
+  const isRunning = session?.status === "running";
+  const isStopping = session?.status === "stopping";
+
+  // ✅ Hooks SIEMPRE arriba, sin returns antes
+  useEffect(() => {
+    if (session?.status === "running") {
+      setFeedback("start");
+    }
+
+    if (session?.status === "stopping") {
+      setFeedback("stop");
+    }
+
+    if (!session) {
+      setFeedback(null);
+    }
+  }, [session?.status]);
+
+  useEffect(() => {
+    if (!feedback) return;
+
+    const id = setTimeout(() => {
+      setFeedback(null);
+    }, 280);
+
+    return () => clearTimeout(id);
+  }, [feedback]);
+
+  const handleClick = () => {
+    if (isRunning) stop();
+    else start(projectId ?? undefined);
   };
 
-
-  const handleStopClick = () => {
-    if (!session) return;
-
-    const paused = pauseSession(session); // endTime fijo acá
-    setSession(paused);
-    setShowModal(true);
-  };
-
-  const handleConfirm = (description: string, tags: string[]) => {
-    if (!session) return;
-
-    const finished = finalizeSession(session, description, tags);
-    saveSession(finished);
-
-    setSession(null);
-    setShowModal(false);
-  };
-
-  const handleCancel = () => {
-    if (!session) return;
-
-    const resumed = resumeSession(session);
-    setSession(resumed);
-    setShowModal(false);
-  };
+  // ✅ Ahora sí, return condicional
+  if (loading) return null;
 
   return (
     <>
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-        <button
-          onClick={session ? handleStopClick : handleStart}
-          style={{
-                backgroundColor: "var(--color-primary)",
-                color: "white",
-                padding: "2.5rem 3.5rem",
-                borderRadius: "999px",
-                border: "none",
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                cursor: "pointer",
-              }}
-        >
-          {session ? "Stop session" : "Start session"}
-        </button>
+      <div className="session-center">
+        <span className="active-project">
+          {projectName ?? "Global"}
+        </span>
 
-        {session && (
-          <div style={{ marginTop: "0.75rem", textAlign: "center" }}>
-            <SessionTimer session={session} />
-          </div>
-        )}
+        <div
+          className={[
+            "session-button-wrapper",
+            isRunning && "running",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <button
+            onClick={handleClick}
+            disabled={isStopping}
+            className={[
+              "session-button",
+              isRunning && "running",
+              isStopping && "stopping",
+              feedback === "start" && "feedback-start",
+              feedback === "stop" && "feedback-stop",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {isRunning ? (
+              <div className="session-button-content">
+                <SessionTimer session={session} />
+                <span className="stop-label">Stop session</span>
+              </div>
+            ) : (
+              "Start session"
+            )}
+          </button>
+
+          {/* ❌ cancelar sin guardar */}
+          {isRunning && (
+            <button
+              className="cancel-session-btn"
+              onClick={cancel}
+              title="Cancel session (won’t be saved)"
+              aria-label="Cancel session without saving"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
-      {showModal && (
+      {session && isStopping && (
         <SessionModal
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
+          onConfirm={finalize}
+          onCancel={cancel}
         />
       )}
     </>

@@ -71,3 +71,9 @@ export function resumeSession(session: WorkSession): WorkSession {
     status: "running",
   };
 }
+
+export async function cancelSession() {
+  await fetch("http://localhost:3001/sessions/cancel", {
+    method: "POST",
+  });
+}

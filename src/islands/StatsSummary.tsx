@@ -1,28 +1,35 @@
+import "./StatsSummary.css";
 import { useEffect, useState } from "react";
-import type { WorkSession } from "../domain/session";
-import { getSessions } from "../services/storage";
+import { getFinishedSessions } from "../services/sessionService";
+import { adaptFinishedSessions } from "../services/sessionAdapter";
+import type { FinishedSession } from "../types/finishedSession";
 import {
-  getFinishedSessions,
   getSessionsInLastDays,
   getTotalDurationMs,
+  getDurationByTag,
 } from "../domain/stats";
 import TagBarChart from "./TagBarChart";
 
+
 export default function StatsSummary() {
-  const [sessions, setSessions] = useState<WorkSession[]>([]);
+  const [sessions, setSessions] = useState<FinishedSession[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const data = getSessions();
-    setSessions(data);
-    console.log("All sessions (raw):", data);
+    getFinishedSessions()
+      .then(adaptFinishedSessions)
+      .then(setSessions)
+      .finally(() => setLoading(false));
   }, []);
 
-  const finished = getFinishedSessions(sessions);
-  const last7 = getSessionsInLastDays(finished, 7);
-  const last30 = getSessionsInLastDays(finished, 30);
+  if (loading) return <p>Loading stats…</p>;
+  if (sessions.length === 0) return <p>No data yet.</p>;
+
+  const last7 = getSessionsInLastDays(sessions, 7);
+  const last30 = getSessionsInLastDays(sessions, 30);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div className="stats-grid">
       <StatBlock title="Last 7 days" sessions={last7} />
       <StatBlock title="Last 30 days" sessions={last30} />
     </div>
@@ -34,42 +41,36 @@ function StatBlock({
   sessions,
 }: {
   title: string;
-  sessions: WorkSession[];
+  sessions: FinishedSession[];
 }) {
   const totalMs = getTotalDurationMs(sessions);
 
   return (
-    <section
-      style={{
-        background: "var(--color-surface)",
-        padding: "1.25rem",
-        borderRadius: "12px",
-        boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
-      }}
+    <section className="stat-card"
     >
-      <h2>{title}</h2>
-
+      <h3>{title}</h3>
       <p>
-        Total time: <b>{formatDuration(totalMs)}</b>
+        Total time: <b>{formatTotal(totalMs)}</b>
       </p>
 
       {sessions.length > 0 && (
-        <>
-          <h4 style={{ marginTop: "1rem" }}>By tag</h4>
-          <TagBarChart sessions={sessions} />
-        </>
+        <TagBarChart sessions={sessions} />
       )}
     </section>
   );
 }
 
-function formatDuration(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
+function formatTotal(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60000);
 
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  if (totalMinutes < 1) return "1m";
+
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+
+  if (hours > 0) {
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+
+  return `${mins}m`;
 }

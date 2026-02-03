@@ -1,0 +1,12 @@
+.dashboard {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.75rem;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}

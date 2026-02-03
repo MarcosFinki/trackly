@@ -1,4 +1,6 @@
 ---
+import Sidebar from "../components/Sidebar";
+import SidebarShell from "../components/SidebarShell";
 const { title = "Trackly" } = Astro.props;
 ---
 
@@ -9,18 +11,11 @@ const { title = "Trackly" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
     <link rel="stylesheet" href="/src/styles/global.css" />
-    </head>
+  </head>
 
   <body>
-    <header style="margin-bottom: 2rem;">
-      <nav style="display: flex; gap: 1rem;">
-        <a href="/">Dashboard</a>
-        <a href="/history">History</a>
-        <a href="/stats">Stats</a>
-      </nav>
-    </header>
-
-    <main>
+    <SidebarShell client:load>
       <slot />
-    </main>
+    </SidebarShell>
   </body>
+</html>

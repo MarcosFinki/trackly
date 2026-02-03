@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import type { WorkSession } from "../domain/session";
+import type { ActiveSession } from "../services/sessionService";
+import "./SessionTimer.css";
 
 interface Props {
-  session: WorkSession;
+  session: ActiveSession;
 }
 
 export default function SessionTimer({ session }: Props) {
@@ -24,7 +25,7 @@ export default function SessionTimer({ session }: Props) {
     }, [session]);
 
     useEffect(() => {
-    if (session.status === "paused" && session.endTime) {
+    if (session.status === "stopping" && session.endTime) {
         const start = new Date(session.startTime).getTime();
         const end = new Date(session.endTime).getTime();
         setElapsedMs(end - start);
@@ -32,13 +33,7 @@ export default function SessionTimer({ session }: Props) {
     }, [session]);
 
   return (
-    <span
-      style={{
-        fontFamily: "monospace",
-        fontSize: "1.1rem",
-        color: "var(--color-text)",
-      }}
-    >
+    <span className="session-timer">
       {formatDuration(elapsedMs)}
     </span>
   );
