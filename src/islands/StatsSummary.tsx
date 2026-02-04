@@ -6,21 +6,33 @@ import type { FinishedSession } from "../types/finishedSession";
 import {
   getSessionsInLastDays,
   getTotalDurationMs,
-  getDurationByTag,
 } from "../domain/stats";
 import TagBarChart from "./TagBarChart";
-
+import { useActiveProject } from "../hooks/useActiveProject";
+import { useStatsInvalidation } from "../hooks/useStatsInvalidation";
 
 export default function StatsSummary() {
   const [sessions, setSessions] = useState<FinishedSession[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { projectId } = useActiveProject();
+  const statsVersion = useStatsInvalidation();
+
   useEffect(() => {
+    setLoading(true);
+
     getFinishedSessions()
       .then(adaptFinishedSessions)
-      .then(setSessions)
+      .then((all) => {
+        const filtered =
+          projectId == null
+            ? all
+            : all.filter((s) => s.projectId === projectId);
+
+        setSessions(filtered);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [projectId, statsVersion]);
 
   if (loading) return <p>Loading stats…</p>;
   if (sessions.length === 0) return <p>No data yet.</p>;
@@ -30,13 +42,15 @@ export default function StatsSummary() {
 
   return (
     <div className="stats-grid">
-      <StatBlock title="Last 7 days" sessions={last7} />
-      <StatBlock title="Last 30 days" sessions={last30} />
+      <StatCard title="Last 7 days" sessions={last7} />
+      <StatCard title="Last 30 days" sessions={last30} />
     </div>
   );
 }
 
-function StatBlock({
+/* ---------- Card ---------- */
+
+function StatCard({
   title,
   sessions,
 }: {
@@ -46,11 +60,16 @@ function StatBlock({
   const totalMs = getTotalDurationMs(sessions);
 
   return (
-    <section className="stat-card"
-    >
-      <h3>{title}</h3>
-      <p>
-        Total time: <b>{formatTotal(totalMs)}</b>
+    <section className="stat-card">
+      <header className="stat-header">
+        <h3>{title}</h3>
+        <span className="stat-total">
+          {formatTotal(totalMs)}
+        </span>
+      </header>
+
+      <p className="stat-meta">
+        {sessions.length} session{sessions.length !== 1 ? "s" : ""}
       </p>
 
       {sessions.length > 0 && (
@@ -60,17 +79,18 @@ function StatBlock({
   );
 }
 
+/* ---------- Helpers ---------- */
+
 function formatTotal(ms: number): string {
   const totalMinutes = Math.floor(ms / 60000);
-
   if (totalMinutes < 1) return "1m";
 
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
-  if (hours > 0) {
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
-
-  return `${mins}m`;
+  return hours > 0
+    ? mins > 0
+      ? `${hours}h ${mins}m`
+      : `${hours}h`
+    : `${mins}m`;
 }

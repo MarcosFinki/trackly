@@ -19,7 +19,7 @@ export function getSessionsInLastDays<T extends SessionForStats>(
   const limit = now - days * 24 * 60 * 60 * 1000;
 
   return sessions.filter(
-    (s) => s.endTime.getTime() >= limit
+    (s) => s.startTime.getTime() >= limit
   );
 }
 

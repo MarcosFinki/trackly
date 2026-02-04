@@ -1,9 +1,7 @@
 .stats-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  max-width: 520px;
-  margin: 0 auto;
 }
 
 .stat-card {
@@ -12,15 +10,30 @@
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
+  gap: 0.4rem;
+  min-height: 0;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   gap: 0.5rem;
 }
 
-.stat-card h3 {
-  font-size: 0.85rem;
+.stat-header h3 {
+  font-size: 0.75rem;
   margin: 0;
+  opacity: 0.7;
 }
 
-.stat-card p {
-  font-size: 0.8rem;
-  margin: 0;
+.stat-total {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stat-meta {
+  font-size: 0.65rem;
+  opacity: 0.55;
 }

@@ -1,88 +1,85 @@
+import { useState } from "react";
 import type { SessionForStats } from "../domain/stats";
 import { getDurationByTag } from "../domain/stats";
+import AllTagsModal from "./AllTagsModal";
+import "./TagBarChart.css";
 
 interface Props {
   sessions: SessionForStats[];
 }
 
 export default function TagBarChart({ sessions }: Props) {
+  const [showAll, setShowAll] = useState(false);
+
   const byTag = getDurationByTag(sessions);
 
-  // convertir a minutos (float, para proporción de barras)
-  const entries = Object.entries(byTag).map(([tag, ms]) => {
-    const minutes = ms / 60000;
-    return [tag, minutes] as const;
-  });
+  const entries = Object.entries(byTag)
+    .map(([tag, ms]) => ({
+      tag,
+      minutes: ms / 60000,
+    }))
+    .sort((a, b) => b.minutes - a.minutes);
 
   if (entries.length === 0) {
-    return <p>No data yet.</p>;
+    return <p className="tag-empty">No tags</p>;
   }
 
-  const max = Math.max(...entries.map(([, minutes]) => minutes));
+  const max = entries[0].minutes;
+  const visible = entries.slice(0, 3);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      {entries.map(([tag, minutes]) => {
-        const percent = (minutes / max) * 100;
+    <>
+      <div className="tag-bars">
+        {visible.map(({ tag, minutes }) => {
+          const percent = (minutes / max) * 100;
 
-        return (
-          <div key={tag}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "0.25rem",
-                fontSize: "0.85rem",
-              }}
-            >
-              <span>{tag}</span>
-              <span>{formatHoursMinutes(minutes)}</span>
-            </div>
+          return (
+            <div key={tag} className="tag-row">
+              <div className="tag-row-header">
+                <span className="tag-name">{tag}</span>
+                <span className="tag-time">
+                  {formatHoursMinutes(minutes)}
+                </span>
+              </div>
 
-            <div
-              style={{
-                height: "10px",
-                background: "rgba(0,0,0,0.08)",
-                borderRadius: "999px",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${percent}%`,
-                  height: "100%",
-                  background: "var(--color-primary)",
-                  borderRadius: "999px",
-                }}
-              />
+              <div className="tag-bar-bg">
+                <div
+                  className="tag-bar-fill"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {entries.length > 3 && (
+        <button
+          className="view-all-tags"
+          onClick={() => setShowAll(true)}
+        >
+          View all tags
+        </button>
+      )}
+
+      {showAll && (
+        <AllTagsModal
+          entries={entries}
+          onClose={() => setShowAll(false)}
+        />
+      )}
+    </>
   );
 }
 
 /* ---------- Helpers ---------- */
 
-/**
- * SOLO horas y minutos.
- * Nunca segundos.
- * Mínimo: 1m
- */
 function formatHoursMinutes(minutes: number): string {
-  const totalMinutes = Math.floor(minutes);
+  const total = Math.floor(minutes);
+  if (total < 1) return "1m";
 
-  if (totalMinutes < 1) {
-    return "1m";
-  }
+  const h = Math.floor(total / 60);
+  const m = total % 60;
 
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-
-  if (hours > 0) {
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
-
-  return `${mins}m`;
+  return h > 0 ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
 }

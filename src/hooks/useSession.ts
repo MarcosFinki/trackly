@@ -7,6 +7,7 @@ import {
   finalizeSession,
   type ActiveSession,
 } from "../services/sessionService";
+import { invalidateStats } from "../hooks/useStatsInvalidation";
 
 export function useSession() {
   const [session, setSession] = useState<ActiveSession | null>(null);
@@ -46,6 +47,8 @@ export function useSession() {
 
     await finalizeSession(session.id, description, tags);
     setSession(null);
+
+    invalidateStats(); // 🔥 AHORA SÍ FUNCIONA
   };
 
   return {
