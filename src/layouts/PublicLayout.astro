@@ -1,5 +1,4 @@
 ---
-import SidebarShell from "../components/SidebarShell";
 const { title = "Trackly" } = Astro.props;
 ---
 
@@ -12,8 +11,8 @@ const { title = "Trackly" } = Astro.props;
   </head>
 
   <body>
-    <SidebarShell client:load>
+    <main style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
       <slot />
-    </SidebarShell>
+    </main>
   </body>
 </html>

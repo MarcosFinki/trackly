@@ -1,19 +1,15 @@
 ---
-import "../styles/dashboard.css";
 import AppLayout from "../layouts/AppLayout.astro";
-import StartStopButton from "../islands/StartStopButton";
-import StatsSummary from "../islands/StatsSummary";
 
+const res = await fetch("http://localhost:3001/sessions/active", {
+  credentials: "include",
+});
+
+if (res.status === 401) {
+  return Astro.redirect("/login");
+}
 ---
 
 <AppLayout title="Trackly">
-  <div class="dashboard">
-    <div class="center">
-      <StartStopButton client:load />
-    </div>
-
-    <div class="stats">
-      <StatsSummary client:load />
-    </div>
-  </div>
+  <!-- tu dashboard -->
 </AppLayout>
