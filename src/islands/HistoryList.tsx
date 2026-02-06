@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { getFinishedSessions } from "../services/sessionService";
-import { adaptFinishedSessions } from "../services/sessionAdapter";
+import { adaptFinishedSessionsFromApi } from "../infra/adapters/sessionAdapter";
 import type { FinishedSession } from "../types/finishedSession";
+import "./HistoryList.css";
 
 export default function HistoryList() {
   const [sessions, setSessions] = useState<FinishedSession[]>([]);
@@ -9,7 +10,7 @@ export default function HistoryList() {
 
   useEffect(() => {
     getFinishedSessions()
-      .then(adaptFinishedSessions)
+      .then(adaptFinishedSessionsFromApi)
       .then(setSessions)
       .finally(() => setLoading(false));
   }, []);
@@ -18,35 +19,18 @@ export default function HistoryList() {
   if (sessions.length === 0) return <p>No sessions yet.</p>;
 
   return (
-    <ul style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <ul className="history-list">
       {sessions.map((s) => (
-        <li
-          key={s.id}
-          style={{
-            background: "var(--color-surface)",
-            padding: "1rem",
-            borderRadius: "10px",
-            boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
-          }}
-        >
+        <li key={s.id} className="history-item">
           <strong>{s.description || "No description"}</strong>
 
-          <div style={{ fontSize: "0.85rem", opacity: 0.7 }}>
+          <div className="history-meta">
             {formatDate(s.startTime)} · {formatDuration(s)}
           </div>
 
-          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+          <div className="history-tags">
             {s.tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  background: "var(--color-primary)",
-                  color: "white",
-                  padding: "0.2rem 0.6rem",
-                  borderRadius: "999px",
-                  fontSize: "0.75rem",
-                }}
-              >
+              <span key={tag} className="history-tag">
                 {tag}
               </span>
             ))}

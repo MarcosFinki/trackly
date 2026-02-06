@@ -1,0 +1,45 @@
+.session-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.session-modal {
+  background-color: var(--color-bg);
+  padding: 1.5rem;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.session-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.session-tag {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  background: transparent;
+}
+
+.session-tag.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.session-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

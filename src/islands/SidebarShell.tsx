@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import "./SidebarShell.css";
-import CreateProjectModal from "../islands/CreateProjectModal";
+import CreateProjectModal from "./CreateProjectModal";
 import { createProject } from "../services/projectService";
 import { useActiveProject } from "../hooks/useActiveProject";
-import HeaderTitle from "./HeaderTitle";
+import HeaderTitle from "../components/HeaderTitle";
 
 export default function SidebarShell({
     children,
@@ -36,11 +36,15 @@ export default function SidebarShell({
   }, []);
 
   const handleCreateProject = async (name: string) => {
-    const project = await createProject(name);
-    selectProject(project.id);   // ahora sí existe
-    setShowCreateProject(false);
-    setOpen(false);
-  };
+  const project = await createProject(name);
+
+  selectProject(project.id);
+
+  window.dispatchEvent(new Event("trackly:projects-changed"));
+
+  setShowCreateProject(false);
+  setOpen(false);
+};
 
   return (
     <>

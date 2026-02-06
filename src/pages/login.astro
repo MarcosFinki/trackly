@@ -1,15 +1,20 @@
 ---
+export const prerender = false;
+
 import PublicLayout from "../layouts/PublicLayout.astro";
 import AuthForm from "../components/AuthForm";
 
+const cookie = Astro.request.headers.get("cookie");
+
 const res = await fetch("http://localhost:3001/auth/me", {
-  credentials: "include",
+  headers: {
+    cookie: cookie ?? "",
+  },
 });
 
 if (res.ok) {
   return Astro.redirect("/");
 }
-
 ---
 
 <PublicLayout title="Login – Trackly">

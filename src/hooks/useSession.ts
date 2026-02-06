@@ -2,44 +2,46 @@ import { useEffect, useState } from "react";
 import {
   getActiveSession,
   startSession,
-  stopSession,
-  cancelSession,
   finalizeSession,
+  cancelSession,
   type ActiveSession,
 } from "../services/sessionService";
-import { invalidateStats } from "../hooks/useStatsInvalidation";
+import { invalidateStats } from "./useStatsInvalidation";
 
 export function useSession() {
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔹 UI only
+  const [isStopping, setIsStopping] = useState(false);
+
+  const refresh = async () => {
+    const fresh = await getActiveSession();
+    setSession(fresh);
+  };
+
   useEffect(() => {
-    getActiveSession()
-      .then(setSession)
-      .finally(() => setLoading(false));
+    refresh().finally(() => setLoading(false));
   }, []);
 
+  // ▶️ START (backend)
   const start = async (projectId?: number) => {
     await startSession(projectId);
-    const fresh = await getActiveSession();
-    setSession(fresh);
+    await refresh();
   };
 
-  const stop = async () => {
-    await stopSession();
-    const fresh = await getActiveSession();
-    setSession(fresh);
+  // ⏸️ STOP (solo UI)
+  const stop = () => {
+    setIsStopping(true);
   };
 
-  const cancel = async () => {
-    try {
-      await cancelSession();
-    } finally {
-      setSession(null);
-    }
+  // ❌ Cancelar modal → seguir sesión
+  const cancelStop = () => {
+    setIsStopping(false);
   };
 
-  const finalize = async (
+  // ✅ Guardar sesión
+  const confirmFinalize = async (
     description: string,
     tags: string[]
   ) => {
@@ -47,16 +49,27 @@ export function useSession() {
 
     await finalizeSession(session.id, description, tags);
     setSession(null);
+    setIsStopping(false);
+    invalidateStats();
+  };
 
-    invalidateStats(); // 🔥 AHORA SÍ FUNCIONA
+  // ❌ Cancelar sesión sin guardar (backend)
+  const cancel = async () => {
+    if (!session) return;
+
+    await cancelSession();
+    setSession(null);
+    setIsStopping(false);
   };
 
   return {
     session,
     loading,
+    isStopping,
     start,
     stop,
     cancel,
-    finalize,
+    cancelStop,
+    confirmFinalize,
   };
 }

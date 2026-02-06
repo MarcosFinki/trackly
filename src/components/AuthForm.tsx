@@ -1,5 +1,6 @@
 import { useState } from "react";
-import "./AuthForm.css"
+import "./AuthForm.css";
+import { login, register } from "../services/authService";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -18,28 +19,32 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setError(null);
     setLoading(true);
 
-    const res = await fetch(
-      `http://localhost:3001/auth/${isLogin ? "login" : "register"}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      }
-    );
-
-    setLoading(false);
-
-    if (!res.ok) {
-      if (!isLogin && res.status === 409) {
-        setError("User already exists");
+    try {
+      if (isLogin) {
+        await login(email, password);
       } else {
-        setError(isLogin ? "Invalid credentials" : "Registration failed");
+        await register(email, password);
       }
-      return;
-    }
 
-    window.location.href = "/";
+      window.location.href = "/";
+    } catch (err) {
+      if (err instanceof Error) {
+        switch (err.message) {
+          case "INVALID_CREDENTIALS":
+            setError("Invalid credentials");
+            break;
+          case "USER_EXISTS":
+            setError("User already exists");
+            break;
+          default:
+            setError(isLogin ? "Login failed" : "Registration failed");
+        }
+      } else {
+        setError("Unexpected error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,6 +62,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <div className="login-field">
         <label>Email</label>
         <input
+          type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required

@@ -1,81 +1,67 @@
 import { useEffect, useState } from "react";
 import { useSession } from "../hooks/useSession";
-import SessionTimer from "./SessionTimer";
+import SessionTimer from "../components/SessionTimer";
 import SessionModal from "./SessionModal";
 import { useActiveProject } from "../hooks/useActiveProject";
+import { useProject } from "../hooks/useProject";
 import "./StartStopButton.css";
 
 export default function StartStopButton() {
   const {
     session,
     loading,
+    isStopping,
     start,
     stop,
     cancel,
-    finalize,
+    cancelStop,
+    confirmFinalize,
   } = useSession();
 
-  const { projectId, projectName } = useActiveProject();
-  const [feedback, setFeedback] = useState<"start" | "stop" | null>(null);
+  const { projectId } = useActiveProject();
+  const project = useProject(projectId);
 
-  const isRunning = session?.status === "running";
-  const isStopping = session?.status === "stopping";
+  const isRunning = !!session;
 
-  // ✅ Hooks SIEMPRE arriba, sin returns antes
+  const [feedback, setFeedback] =
+    useState<"start" | "stop" | null>(null);
+
   useEffect(() => {
-    if (session?.status === "running") {
-      setFeedback("start");
-    }
-
-    if (session?.status === "stopping") {
-      setFeedback("stop");
-    }
-
-    if (!session) {
-      setFeedback(null);
-    }
-  }, [session?.status]);
+    if (isRunning) setFeedback("start");
+    if (isStopping) setFeedback("stop");
+    if (!session) setFeedback(null);
+  }, [isRunning, isStopping, session]);
 
   useEffect(() => {
     if (!feedback) return;
-
-    const id = setTimeout(() => {
-      setFeedback(null);
-    }, 280);
-
+    const id = setTimeout(() => setFeedback(null), 280);
     return () => clearTimeout(id);
   }, [feedback]);
 
   const handleClick = () => {
-    if (isRunning) stop();
-    else start(projectId ?? undefined);
+    if (isRunning) {
+      stop(); // solo UI
+    } else {
+      start(projectId ?? undefined);
+    }
   };
 
-  // ✅ Ahora sí, return condicional
   if (loading) return null;
 
   return (
     <>
       <div className="session-center">
         <span className="active-project">
-          {projectName ?? "Global"}
+          {project ? project.name : "Global"}
         </span>
 
-        <div
-          className={[
-            "session-button-wrapper",
-            isRunning && "running",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
+        <div className={`session-button-wrapper ${isRunning ? "running" : ""}`}>
           <button
             onClick={handleClick}
             disabled={isStopping}
             className={[
               "session-button",
               isRunning && "running",
-              isStopping && "stopping",
               feedback === "start" && "feedback-start",
               feedback === "stop" && "feedback-stop",
             ]
@@ -92,13 +78,11 @@ export default function StartStopButton() {
             )}
           </button>
 
-          {/* ❌ cancelar sin guardar */}
           {isRunning && (
             <button
               className="cancel-session-btn"
               onClick={cancel}
               title="Cancel session (won’t be saved)"
-              aria-label="Cancel session without saving"
             >
               ✕
             </button>
@@ -108,8 +92,8 @@ export default function StartStopButton() {
 
       {session && isStopping && (
         <SessionModal
-          onConfirm={finalize}
-          onCancel={cancel}
+          onConfirm={confirmFinalize}
+          onCancel={cancelStop}
         />
       )}
     </>

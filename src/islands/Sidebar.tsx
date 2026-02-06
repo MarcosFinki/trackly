@@ -19,8 +19,12 @@ export default function Sidebar({
   const { projectId, selectProject } = useActiveProject();
 
   useEffect(() => {
-    getProjects().then(setProjects);
+    loadProjects();
   }, []);
+
+  const loadProjects = () => {
+    getProjects().then(setProjects);
+  };
 
   const handleSelectProject = (id: number | null) => {
     selectProject(id);

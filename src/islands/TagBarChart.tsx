@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { SessionForStats } from "../domain/stats";
 import { getDurationByTag } from "../domain/stats";
-import AllTagsModal from "./AllTagsModal";
+import AllTagsModal from "../components/AllTagsModal";
 import "./TagBarChart.css";
 
 interface Props {

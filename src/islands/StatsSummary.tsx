@@ -1,7 +1,7 @@
 import "./StatsSummary.css";
 import { useEffect, useState } from "react";
 import { getFinishedSessions } from "../services/sessionService";
-import { adaptFinishedSessions } from "../services/sessionAdapter";
+import { adaptFinishedSessionsFromApi } from "../infra/adapters/sessionAdapter";
 import type { FinishedSession } from "../types/finishedSession";
 import {
   getSessionsInLastDays,
@@ -22,7 +22,7 @@ export default function StatsSummary() {
     setLoading(true);
 
     getFinishedSessions()
-      .then(adaptFinishedSessions)
+      .then(adaptFinishedSessionsFromApi)
       .then((all) => {
         const filtered =
           projectId == null

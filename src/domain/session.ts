@@ -1,79 +1,59 @@
-export type SessionStatus = "idle" | "running" | "paused" | "finished";
+export type TimerStatus = "running" | "paused";
 
-export interface WorkSession {
-  id: string;
+export interface SessionTimerState {
   startTime: Date;
-  endTime: Date | null;
-  description: string | null;
-  tags: string[];
-  status: SessionStatus;
+  pausedAt: Date | null;
+  status: TimerStatus;
 }
 
-export function startSession(): WorkSession {
+export function startTimer(startTime: Date): SessionTimerState {
   return {
-    id: crypto.randomUUID(),
-    startTime: new Date(),
-    endTime: null,
-    description: null,
-    tags: [],
+    startTime,
+    pausedAt: null,
     status: "running",
   };
 }
 
-export function finalizeSession(
-  session: WorkSession,
-  description: string,
-  tags: string[]
-): WorkSession {
-  if (session.status !== "paused" || !session.endTime) {
-    throw new Error("Session must be paused before finalizing");
+export function pauseTimer(
+  timer: SessionTimerState
+): SessionTimerState {
+  if (timer.status !== "running") {
+    throw new Error("Timer is not running");
   }
 
   return {
-    ...session,
-    description,
-    tags,
-    status: "finished",
-  };
-}
-
-export function getSessionDurationMs(session: WorkSession): number {
-  if (!session.endTime) return 0;
-  return session.endTime.getTime() - session.startTime.getTime();
-}
-
-export function pauseSession(session: WorkSession): WorkSession {
-  if (session.status !== "running") {
-    throw new Error("Cannot pause a session that is not running");
-  }
-
-  return {
-    ...session,
-    endTime: new Date(),
+    ...timer,
+    pausedAt: new Date(),
     status: "paused",
   };
 }
 
-export function resumeSession(session: WorkSession): WorkSession {
-  if (session.status !== "paused" || !session.endTime) {
-    throw new Error("Cannot resume a session that is not paused");
+export function resumeTimer(
+  timer: SessionTimerState
+): SessionTimerState {
+  if (timer.status !== "paused" || !timer.pausedAt) {
+    throw new Error("Timer is not paused");
   }
 
   const pausedDuration =
-    new Date().getTime() - session.endTime.getTime();
+    Date.now() - timer.pausedAt.getTime();
 
   return {
-    ...session,
     startTime: new Date(
-      session.startTime.getTime() + pausedDuration
+      timer.startTime.getTime() + pausedDuration
     ),
-    endTime: null,
+    pausedAt: null,
     status: "running",
   };
 }
 
-export async function cancelSession() {
-  await fetch("http://localhost:3001/sessions/cancel", {
-    method: "POST",
-  });
+export function getElapsedMs(
+  timer: SessionTimerState
+): number {
+  const end =
+    timer.status === "paused" && timer.pausedAt
+      ? timer.pausedAt
+      : new Date();
+
+  return end.getTime() - timer.startTime.getTime();
 }

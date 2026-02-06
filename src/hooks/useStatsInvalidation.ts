@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-let invalidate = () => {};
+type Listener = () => void;
+
+let listeners: Listener[] = [];
 
 export function useStatsInvalidation() {
   const [version, setVersion] = useState(0);
 
-  invalidate = () => {
-    setVersion(v => v + 1);
-  };
+  useEffect(() => {
+    const listener = () => {
+      setVersion(v => v + 1);
+    };
+
+    listeners.push(listener);
+
+    return () => {
+      listeners = listeners.filter(l => l !== listener);
+    };
+  }, []);
 
   return version;
 }
 
 export function invalidateStats() {
-  invalidate();
+  listeners.forEach(l => l());
 }
