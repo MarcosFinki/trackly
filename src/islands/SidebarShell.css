@@ -1,11 +1,31 @@
 /* ---------- Sidebar Shell ---------- */
 
 .app-header {
+  position: relative;
   height: 48px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 0.75rem;
+  overflow: hidden;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.header-title-wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  max-width: calc(100% - 200px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hamburger {
@@ -14,6 +34,7 @@
   font-size: 1.2rem;
   cursor: pointer;
 }
+
 
 .app-main {
   height: calc(100vh - 48px);

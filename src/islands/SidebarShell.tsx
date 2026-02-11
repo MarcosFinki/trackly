@@ -5,6 +5,7 @@ import CreateProjectModal from "./CreateProjectModal";
 import { createProject } from "../services/projectService";
 import { useActiveProject } from "../hooks/useActiveProject";
 import HeaderTitle from "../components/HeaderTitle";
+import UserMenu from "../components/UserMenu";
 
 export default function SidebarShell({
     children,
@@ -49,13 +50,22 @@ export default function SidebarShell({
   return (
     <>
       <header className="app-header">
-        <button className="hamburger" onClick={() => setOpen(true)}>
-          ☰
-        </button>
+        <div className="header-left">
+          <button
+            className="hamburger"
+            onClick={() => setOpen(true)}
+          >
+            ☰
+          </button>
+        </div>
 
-        <HeaderTitle />
+        <div className="header-title-wrapper">
+          <HeaderTitle />
+        </div>
 
-        <div style={{ width: 24 }} />
+        <div className="header-right">
+          <UserMenu />
+        </div>
       </header>
 
       <main className="app-main">{children}</main>

@@ -32,3 +32,23 @@ export async function register(
     throw new Error("REGISTER_FAILED");
   }
 }
+
+export async function updateProfile(data: {
+  display_name?: string;
+  avatar_url?: string;
+  email?: string;
+  password?: string;
+}) {
+  const res = await fetch(`${API_URL}/auth/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("UPDATE_PROFILE_FAILED");
+  }
+
+  return res.json();
+}
