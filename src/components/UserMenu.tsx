@@ -41,7 +41,10 @@ export default function UserMenu() {
         onClick={() => (open ? close() : setOpen(true))}
         >
         {user.avatar_url ? (
-          <img src={user.avatar_url} alt="avatar" />
+          <img
+            src={`http://localhost:3001${user.avatar_url}-thumb.webp`}
+            alt="avatar"
+          />
         ) : (
           <div className="avatar-fallback">{initials}</div>
         )}
@@ -82,6 +85,7 @@ export default function UserMenu() {
 
         {showEdit && (
           <EditProfileModal
+            key="edit-profile"
             onClose={() => setShowEdit(false)}
           />
         )}

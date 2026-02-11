@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./ProfilePreviewCard.css";
 
+const API_URL = "http://localhost:3001";
+
 export default function ProfilePreviewCard({
   profile,
 }: {
@@ -18,13 +20,19 @@ export default function ProfilePreviewCard({
     profile.display_name?.[0]?.toUpperCase() ??
     profile.email[0].toUpperCase();
 
+  const avatarSrc = profile.avatar_url
+    ? profile.avatar_url.startsWith("blob:")
+      ? profile.avatar_url
+      : `${API_URL}${profile.avatar_url}.webp`
+    : null;
+
   return (
     <div className="profile-preview">
       <div className="profile-preview-avatar">
-        {profile.avatar_url ? (
+        {avatarSrc ? (
           <img
-            key={profile.avatar_url}
-            src={profile.avatar_url}
+            key={avatarSrc}
+            src={avatarSrc}
             alt="Avatar"
           />
         ) : (
@@ -56,7 +64,9 @@ export default function ProfilePreviewCard({
                 setShowPassword((v) => !v)
               }
             >
-              {showPassword ? "Ocultar" : "Ver"}
+              {showPassword
+                ? "Ocultar"
+                : "Ver"}
             </button>
           )}
         </div>

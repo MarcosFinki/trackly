@@ -4,11 +4,14 @@ import ProfilePreviewCard from "./ProfilePreviewCard";
 import { updateProfile } from "../services/authService";
 import "./EditProfileModal.css";
 
+const API_URL = "http://localhost:3001";
+
 type EditableProfile = {
   display_name: string;
   email: string;
   avatar_url: string;
   password: string;
+  current_password: string;
 };
 
 export default function EditProfileModal({
@@ -16,123 +19,218 @@ export default function EditProfileModal({
 }: {
   onClose: () => void;
 }) {
-    const { user, loading } = useAuth();
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(
-    null
-    );
+  const { user, loading } = useAuth();
 
-  // ✅ hooks SIEMPRE arriba
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(
+    null
+  );
+
+  const [avatarPreview, setAvatarPreview] =
+    useState<string | null>(null);
+
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null);
+
   const [profile, setProfile] =
     useState<EditableProfile>({
       display_name: "",
       email: "",
       avatar_url: "",
       password: "",
+      current_password: "",
     });
 
   const [initialProfile, setInitialProfile] =
     useState<EditableProfile | null>(null);
 
-  // 🔁 sincronizar cuando llega el user
   useEffect(() => {
     if (!user) return;
+    if (initialProfile) return;
 
     const data: EditableProfile = {
       display_name: user.display_name ?? "",
       email: user.email,
       avatar_url: user.avatar_url ?? "",
       password: "",
+      current_password: "",
     };
 
     setProfile(data);
     setInitialProfile(data);
-  }, [user]);
+  }, [user, initialProfile]);
 
-  // ⛔ ahora sí podemos salir temprano
+  // Cleanup blob URL
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
   if (loading || !user || !initialProfile) {
     return null;
   }
 
+  const passwordFlowInvalid =
+    profile.password.length > 0 &&
+    profile.current_password.length === 0;
+
   const hasChanges =
-    profile.display_name !== initialProfile.display_name ||
-    profile.email !== initialProfile.email ||
-    profile.avatar_url !== initialProfile.avatar_url ||
-    profile.password.length > 0;
+    (profile.display_name !==
+      initialProfile.display_name ||
+      profile.email !== initialProfile.email ||
+      profile.avatar_url !==
+        initialProfile.avatar_url ||
+      selectedFile !== null ||
+      profile.password.length > 0) &&
+    !passwordFlowInvalid;
 
+  const buildPayload = () => {
+    const payload: {
+      display_name?: string;
+      email?: string;
+      password?: string;
+      current_password?: string;
+    } = {};
 
-    const handleSave = async () => {
-        try {
-            setSaving(true);
-            setError(null);
+    if (
+      profile.display_name !==
+      initialProfile.display_name
+    ) {
+      payload.display_name =
+        profile.display_name.trim();
+    }
 
-            const payload = buildPayload();
+    if (profile.email !== initialProfile.email) {
+      payload.email = profile.email.trim();
+    }
 
-            await updateProfile(payload);
+    if (profile.password.length > 0) {
+      payload.password = profile.password;
+      payload.current_password =
+        profile.current_password;
+    }
 
-            onClose(); // cerramos modal
-            window.dispatchEvent(
-            new Event("trackly:user-updated")
-            );
-        } catch {
-            setError("No se pudo guardar el perfil");
-        } finally {
-            setSaving(false);
-        }
-        };
+    
 
+    return payload;
+  };
 
-    const buildPayload = () => {
-        const payload: {
-            display_name?: string;
-            avatar_url?: string;
-            email?: string;
-            password?: string;
-        } = {};
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
 
-        if (
-            profile.display_name !==
-            initialProfile.display_name
-        ) {
-            payload.display_name =
-            profile.display_name.trim();
-        }
+      let avatarPath = profile.avatar_url;
 
-        if (
-            profile.avatar_url !==
-            initialProfile.avatar_url
-        ) {
-            const avatar = profile.avatar_url.trim();
-            if (avatar) payload.avatar_url = avatar;
-        }
+      // Subir avatar si hay archivo nuevo
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("avatar", selectedFile);
 
-        if (profile.email !== initialProfile.email) {
-            payload.email = profile.email.trim();
-        }
+        const res = await fetch(
+          `${API_URL}/auth/me/avatar`,
+          {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+          }
+        );
 
-        if (profile.password.length > 0) {
-            payload.password = profile.password;
-        }
+        const data = await res.json();
+        avatarPath = data.avatar_url;
+      }
 
-        return payload;
-        };
+      const payload = buildPayload();
+
+      if (
+        avatarPath !==
+        initialProfile.avatar_url
+      ) {
+        payload.display_name =
+          payload.display_name;
+        // Avatar ya fue guardado por endpoint separado
+      }
+
+      const result = await updateProfile(
+        payload
+      );
+
+      if (result?.passwordChanged) {
+        await fetch(
+          `${API_URL}/auth/logout`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+
+        window.location.href = "/login";
+        return;
+      }
+
+      onClose();
+      window.dispatchEvent(
+        new Event("trackly:user-updated")
+      );
+    } catch (err: any) {
+      if (
+        err?.message ===
+        "Current password incorrect"
+      ) {
+        setError(
+          "La contraseña actual es incorrecta"
+        );
+      } else {
+        setError(
+          "No se pudo guardar el perfil"
+        );
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-card large">
-        <ProfilePreviewCard profile={profile} />
+        <ProfilePreviewCard
+          profile={{
+            ...profile,
+            avatar_url:
+              avatarPreview ||
+              profile.avatar_url,
+          }}
+        />
 
         <div className="profile-form">
           <label>
-            Avatar URL
+            Foto de perfil
             <input
-              value={profile.avatar_url}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  avatar_url: e.target.value,
-                })
-              }
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file =
+                  e.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith("image/")) {
+                  setError("Archivo inválido");
+                  return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                  setError("La imagen supera 2MB");
+                  return;
+                }
+
+                const localUrl =
+                  URL.createObjectURL(file);
+
+                setAvatarPreview(localUrl);
+                setSelectedFile(file);
+              }}
             />
           </label>
 
@@ -143,7 +241,8 @@ export default function EditProfileModal({
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  display_name: e.target.value,
+                  display_name:
+                    e.target.value,
                 })
               }
             />
@@ -163,52 +262,89 @@ export default function EditProfileModal({
           </label>
 
           <label>
-            Contraseña
+            Nueva contraseña
             <input
               type="password"
+              autoComplete="new-password"
               placeholder="Nueva contraseña"
               value={profile.password}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  password: e.target.value,
+                  password:
+                    e.target.value,
                 })
               }
             />
           </label>
+
+          {profile.password && (
+            <label>
+              Contraseña actual
+              <input
+                type="password"
+                autoComplete="current-password"
+                placeholder="Contraseña actual"
+                value={
+                  profile.current_password
+                }
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    current_password:
+                      e.target.value,
+                  })
+                }
+              />
+            </label>
+          )}
+
+          {passwordFlowInvalid && (
+            <div
+              style={{
+                color: "#ff6b6b",
+                fontSize: "0.7rem",
+                marginTop: "4px",
+              }}
+            >
+              Debes ingresar tu contraseña actual
+            </div>
+          )}
         </div>
 
         {error && (
-            <div
-                style={{
-                color: "#ff6b6b",
-                fontSize: "0.75rem",
-                marginTop: "0.5rem",
-                }}
-            >
-                {error}
-            </div>
-            )}
+          <div
+            style={{
+              color: "#ff6b6b",
+              fontSize: "0.75rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         <div className="modal-actions">
-            <button
-                onClick={() => {
-                setProfile(initialProfile);
-                onClose();
-                }}
-                disabled={saving}
-            >
-                Descartar
-            </button>
+          <button
+            onClick={() => {
+              setProfile(initialProfile);
+              onClose();
+            }}
+            disabled={saving}
+          >
+            Descartar
+          </button>
 
-            <button
-                className="primary"
-                disabled={!hasChanges || saving}
-                onClick={handleSave}
-            >
-                {saving ? "Guardando..." : "Guardar"}
-            </button>
-            </div>
+          <button
+            className="primary"
+            disabled={!hasChanges || saving}
+            onClick={handleSave}
+          >
+            {saving
+              ? "Guardando..."
+              : "Guardar"}
+          </button>
+        </div>
       </div>
     </div>
   );

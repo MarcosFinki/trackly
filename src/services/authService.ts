@@ -38,17 +38,23 @@ export async function updateProfile(data: {
   avatar_url?: string;
   email?: string;
   password?: string;
+  current_password?: string;
 }) {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+  const res = await fetch(
+    "http://localhost:3001/auth/me",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    }
+  );
+
+  const json = await res.json();
 
   if (!res.ok) {
-    throw new Error("UPDATE_PROFILE_FAILED");
+    throw new Error(json?.error || "UPDATE_FAILED");
   }
 
-  return res.json();
+  return json;
 }
