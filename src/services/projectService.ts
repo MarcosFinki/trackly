@@ -3,8 +3,12 @@ const API_URL = "http://localhost:3001";
 export interface Project {
   id: number;
   name: string;
+  color: string;
 }
 
+/**
+ * GET projects
+ */
 export async function getProjects(): Promise<Project[]> {
   const res = await fetch(`${API_URL}/projects`, {
     credentials: "include",
@@ -18,14 +22,18 @@ export async function getProjects(): Promise<Project[]> {
   return data.projects;
 }
 
+/**
+ * CREATE project
+ */
 export async function createProject(
-  name: string
+  name: string,
+  color: string
 ): Promise<Project> {
   const res = await fetch(`${API_URL}/projects`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, color }),
   });
 
   if (!res.ok) {
@@ -36,11 +44,44 @@ export async function createProject(
   return data.project;
 }
 
-export async function deleteProject(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/projects/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
+/**
+ * UPDATE project
+ */
+export async function updateProject(
+  id: number,
+  updates: {
+    name?: string;
+    color?: string;
+  }
+): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/projects/${id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updates),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("FAILED_TO_UPDATE_PROJECT");
+  }
+}
+
+/**
+ * DELETE project
+ */
+export async function deleteProject(
+  id: number
+): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/projects/${id}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
 
   if (!res.ok) {
     throw new Error("FAILED_TO_DELETE_PROJECT");

@@ -77,7 +77,7 @@
 
 .profile-form input:focus {
   outline: none;
-  border-color: #4f8cff;
+  border-color: var(--color-primary);
 }
 
 /* Actions */

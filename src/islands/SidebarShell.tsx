@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import "./SidebarShell.css";
-import CreateProjectModal from "./CreateProjectModal";
+import ProjectModal from "./ProjectModal";
 import { createProject } from "../services/projectService";
 import { useActiveProject } from "../hooks/useActiveProject";
 import HeaderTitle from "../components/HeaderTitle";
 import UserMenu from "../components/UserMenu";
 
 export default function SidebarShell({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) {
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
-  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showCreateProject, setShowCreateProject] =
+    useState(false);
+
   const { selectProject } = useActiveProject();
 
+  // 🔒 Bloquear scroll cuando modal abierto
   useEffect(() => {
     if (showCreateProject) {
       document.body.style.overflow = "hidden";
@@ -28,24 +31,41 @@ export default function SidebarShell({
     };
   }, [showCreateProject]);
 
+  // ⌨ Escape solo cierra sidebar si NO hay modal
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        if (showCreateProject) return;
+        setOpen(false);
+      }
     };
+
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+    return () =>
+      window.removeEventListener("keydown", handler);
+  }, [showCreateProject]);
 
-  const handleCreateProject = async (name: string) => {
-  const project = await createProject(name);
+  const handleCreateProject = async (
+    name: string,
+    color: string
+  ) => {
+    const project = await createProject(
+      name,
+      color
+    );
 
-  selectProject(project.id);
+    // seleccionar nuevo proyecto
+    selectProject(project.id, project.color);
 
-  window.dispatchEvent(new Event("trackly:projects-changed"));
+    // cerrar todo correctamente
+    setShowCreateProject(false);
+    setOpen(false);
 
-  setShowCreateProject(false);
-  setOpen(false);
-};
+    // notificar sidebar
+    window.dispatchEvent(
+      new Event("trackly:projects-changed")
+    );
+  };
 
   return (
     <>
@@ -68,7 +88,9 @@ export default function SidebarShell({
         </div>
       </header>
 
-      <main className="app-main">{children}</main>
+      <main className="app-main">
+        {children}
+      </main>
 
       {open && (
         <div
@@ -77,17 +99,28 @@ export default function SidebarShell({
         />
       )}
 
-      <aside className={`sidebar-drawer ${open ? "open" : ""}`}>
-        <Sidebar onClose={() => setOpen(false)} onCreateProject={() => setShowCreateProject(true)} />
+      <aside
+        className={`sidebar-drawer ${
+          open ? "open" : ""
+        }`}
+      >
+        <Sidebar
+          onClose={() => setOpen(false)}
+          onCreateProject={() =>
+            setShowCreateProject(true)
+          }
+        />
       </aside>
 
       {showCreateProject && (
-        <CreateProjectModal
+        <ProjectModal
+          mode="create"
           onConfirm={handleCreateProject}
-          onCancel={() => setShowCreateProject(false)}
+          onCancel={() =>
+            setShowCreateProject(false)
+          }
         />
       )}
-
     </>
   );
 }

@@ -108,3 +108,28 @@
   color: var(--color-surface);
   font-weight: 500;
 }
+
+.project-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.project-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.project-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  transition: opacity 120ms ease;
+}
+
+.project-actions button:hover {
+  opacity: 1;
+}

@@ -42,7 +42,8 @@
 
 .session-button:hover {
   transform: scale(1.04);
-  box-shadow: 0 12px 32px rgba(46, 134, 171, 0.35);
+  box-shadow: 0 12px 32px
+    color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .session-button:active {
@@ -80,7 +81,8 @@
   }
   60% {
     transform: scale(1.06);
-    box-shadow: 0 0 0 10px rgba(46,134,171,0.25);
+    box-shadow: 0 0 0 10px
+      color-mix(in srgb, var(--color-primary) 25%, transparent);
   }
   100% {
     transform: scale(1);

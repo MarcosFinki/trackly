@@ -25,10 +25,22 @@
 }
 
 .modal input {
-  padding: 0.5rem 0.6rem;
+  padding: 0.55rem 0.7rem;
   font-size: 0.85rem;
   border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: inherit;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+/* Focus dinámico */
+.modal input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .modal-actions {
