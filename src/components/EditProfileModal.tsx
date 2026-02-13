@@ -4,7 +4,7 @@ import ProfilePreviewCard from "./ProfilePreviewCard";
 import { updateProfile } from "../services/authService";
 import "./EditProfileModal.css";
 
-const API_URL = "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 type EditableProfile = {
   display_name: string;
@@ -22,9 +22,7 @@ export default function EditProfileModal({
   const { user, loading } = useAuth();
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(
-    null
-  );
+  const [error, setError] = useState<string | null>(null);
 
   const [avatarPreview, setAvatarPreview] =
     useState<string | null>(null);
@@ -78,11 +76,9 @@ export default function EditProfileModal({
     profile.current_password.length === 0;
 
   const hasChanges =
-    (profile.display_name !==
-      initialProfile.display_name ||
+    (profile.display_name !== initialProfile.display_name ||
       profile.email !== initialProfile.email ||
-      profile.avatar_url !==
-        initialProfile.avatar_url ||
+      profile.avatar_url !== initialProfile.avatar_url ||
       selectedFile !== null ||
       profile.password.length > 0) &&
     !passwordFlowInvalid;
@@ -96,8 +92,7 @@ export default function EditProfileModal({
     } = {};
 
     if (
-      profile.display_name !==
-      initialProfile.display_name
+      profile.display_name !== initialProfile.display_name
     ) {
       payload.display_name =
         profile.display_name.trim();
@@ -113,8 +108,6 @@ export default function EditProfileModal({
         profile.current_password;
     }
 
-    
-
     return payload;
   };
 
@@ -125,7 +118,7 @@ export default function EditProfileModal({
 
       let avatarPath = profile.avatar_url;
 
-      // Subir avatar si hay archivo nuevo
+      // 📤 Upload avatar si hay archivo nuevo
       if (selectedFile) {
         const formData = new FormData();
         formData.append("avatar", selectedFile);
@@ -139,26 +132,20 @@ export default function EditProfileModal({
           }
         );
 
+        if (!res.ok) {
+          throw new Error("UPLOAD_FAILED");
+        }
+
         const data = await res.json();
         avatarPath = data.avatar_url;
       }
 
       const payload = buildPayload();
 
-      if (
-        avatarPath !==
-        initialProfile.avatar_url
-      ) {
-        payload.display_name =
-          payload.display_name;
-        // Avatar ya fue guardado por endpoint separado
-      }
+      await updateProfile(payload);
 
-      const result = await updateProfile(
-        payload
-      );
-
-      if (result?.passwordChanged) {
+      // 🔐 Si cambió contraseña → logout forzado
+      if (profile.password.length > 0) {
         await fetch(
           `${API_URL}/auth/logout`,
           {
@@ -172,6 +159,7 @@ export default function EditProfileModal({
       }
 
       onClose();
+
       window.dispatchEvent(
         new Event("trackly:user-updated")
       );
@@ -200,8 +188,7 @@ export default function EditProfileModal({
           profile={{
             ...profile,
             avatar_url:
-              avatarPreview ||
-              profile.avatar_url,
+              avatarPreview || profile.avatar_url,
           }}
         />
 
@@ -212,9 +199,9 @@ export default function EditProfileModal({
               type="file"
               accept="image/*"
               onChange={(e) => {
-                const file =
-                  e.target.files?.[0];
+                const file = e.target.files?.[0];
                 if (!file) return;
+
                 if (!file.type.startsWith("image/")) {
                   setError("Archivo inválido");
                   return;
@@ -241,8 +228,7 @@ export default function EditProfileModal({
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  display_name:
-                    e.target.value,
+                  display_name: e.target.value,
                 })
               }
             />
@@ -271,8 +257,7 @@ export default function EditProfileModal({
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  password:
-                    e.target.value,
+                  password: e.target.value,
                 })
               }
             />
@@ -285,9 +270,7 @@ export default function EditProfileModal({
                 type="password"
                 autoComplete="current-password"
                 placeholder="Contraseña actual"
-                value={
-                  profile.current_password
-                }
+                value={profile.current_password}
                 onChange={(e) =>
                   setProfile({
                     ...profile,
@@ -340,9 +323,7 @@ export default function EditProfileModal({
             disabled={!hasChanges || saving}
             onClick={handleSave}
           >
-            {saving
-              ? "Guardando..."
-              : "Guardar"}
+            {saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>

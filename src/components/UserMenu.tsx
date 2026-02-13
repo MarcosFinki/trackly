@@ -3,6 +3,8 @@ import { useAuth } from "../hooks/useAuth";
 import "./UserMenu.css";
 import EditProfileModal from "./EditProfileModal";
 
+const API_URL = import.meta.env.PUBLIC_API_URL;
+
 export default function UserMenu() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -17,7 +19,8 @@ export default function UserMenu() {
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    return () =>
+      document.removeEventListener("mousedown", handler);
   }, []);
 
   if (!user) return null;
@@ -26,28 +29,31 @@ export default function UserMenu() {
     user.display_name?.[0]?.toUpperCase() ??
     user.email[0].toUpperCase();
 
-    const close = () => {
-        setClosing(true);
-        setTimeout(() => {
-            setOpen(false);
-            setClosing(false);
-        }, 220);
-        };
+  const close = () => {
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 220);
+  };
 
   return (
     <div className="user-menu" ref={ref}>
       <button
         className="user-trigger"
         onClick={() => (open ? close() : setOpen(true))}
-        >
+      >
         {user.avatar_url ? (
           <img
-            src={`http://localhost:3001${user.avatar_url}-thumb.webp`}
+            src={`${API_URL}${user.avatar_url}-thumb.webp`}
             alt="avatar"
           />
         ) : (
-          <div className="avatar-fallback">{initials}</div>
+          <div className="avatar-fallback">
+            {initials}
+          </div>
         )}
+
         <span className="user-name">
           {user.display_name ?? user.email}
         </span>
@@ -55,40 +61,46 @@ export default function UserMenu() {
 
       {open && (
         <div
-            className={`user-dropdown ${
+          className={`user-dropdown ${
             closing ? "closing" : ""
-            }`}
+          }`}
         >
-            <button onClick={() => {
+          <button
+            onClick={() => {
               close();
               setShowEdit(true);
-            }}>
-              Editar perfil
-            </button>
+            }}
+          >
+            Editar perfil
+          </button>
 
-            <div className="divider" />
+          <div className="divider" />
 
-            <button
+          <button
             className="logout"
             onClick={async () => {
-                await fetch("http://localhost:3001/auth/logout", {
-                method: "POST",
-                credentials: "include",
-                });
-                window.location.href = "/login";
-            }}
-            >
-            Cerrar sesión
-            </button>
-        </div>
-        )}
+              await fetch(
+                `${API_URL}/auth/logout`,
+                {
+                  method: "POST",
+                  credentials: "include",
+                }
+              );
 
-        {showEdit && (
-          <EditProfileModal
-            key="edit-profile"
-            onClose={() => setShowEdit(false)}
-          />
-        )}
+              window.location.href = "/login";
+            }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+
+      {showEdit && (
+        <EditProfileModal
+          key="edit-profile"
+          onClose={() => setShowEdit(false)}
+        />
+      )}
     </div>
   );
 }

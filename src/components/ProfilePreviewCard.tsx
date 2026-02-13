@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./ProfilePreviewCard.css";
 
-const API_URL = "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export default function ProfilePreviewCard({
   profile,
@@ -54,7 +54,7 @@ export default function ProfilePreviewCard({
               ? showPassword
                 ? profile.password
                 : "••••••••"
-              : "Contraseña no modificada"}
+              : "Contraseña no modificada"}
           </span>
 
           {profile.password && (

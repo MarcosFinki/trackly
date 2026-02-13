@@ -10,27 +10,17 @@ export default function SessionTimer({ session }: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {
-    if (session.status !== "running") return;
-
     const updateElapsed = () => {
-        const now = Date.now();
-        const start = new Date(session.startTime).getTime();
-        setElapsedMs(now - start);
+      const now = Date.now();
+      const start = new Date(session.startTime).getTime();
+      setElapsedMs(now - start);
     };
 
     updateElapsed();
     const intervalId = setInterval(updateElapsed, 1000);
 
     return () => clearInterval(intervalId);
-    }, [session]);
-
-    useEffect(() => {
-    if (session.status === "stopping" && session.endTime) {
-        const start = new Date(session.startTime).getTime();
-        const end = new Date(session.endTime).getTime();
-        setElapsedMs(end - start);
-    }
-    }, [session]);
+  }, [session.startTime]);
 
   return (
     <span className="session-timer">

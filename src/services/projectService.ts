@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export interface Project {
   id: number;
@@ -6,9 +6,6 @@ export interface Project {
   color: string;
 }
 
-/**
- * GET projects
- */
 export async function getProjects(): Promise<Project[]> {
   const res = await fetch(`${API_URL}/projects`, {
     credentials: "include",
@@ -22,9 +19,6 @@ export async function getProjects(): Promise<Project[]> {
   return data.projects;
 }
 
-/**
- * CREATE project
- */
 export async function createProject(
   name: string,
   color: string
@@ -44,9 +38,6 @@ export async function createProject(
   return data.project;
 }
 
-/**
- * UPDATE project
- */
 export async function updateProject(
   id: number,
   updates: {
@@ -69,9 +60,6 @@ export async function updateProject(
   }
 }
 
-/**
- * DELETE project
- */
 export async function deleteProject(
   id: number
 ): Promise<void> {

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export async function login(email: string, password: string): Promise<void> {
   const res = await fetch(`${API_URL}/auth/login`, {
@@ -40,15 +40,12 @@ export async function updateProfile(data: {
   password?: string;
   current_password?: string;
 }) {
-  const res = await fetch(
-    "http://localhost:3001/auth/me",
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    }
-  );
+  const res = await fetch(`${API_URL}/auth/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
 
   const json = await res.json();
 

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.PUBLIC_API_URL;
+
 interface User {
   id: number;
   email: string;
@@ -9,24 +11,18 @@ interface User {
 }
 
 export function useAuth() {
-  const [user, setUser] =
-    useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMe = async () => {
       try {
         const res = await fetch(
-          "http://localhost:3001/auth/me",
+          `${API_URL}/auth/me`,
           { credentials: "include" }
         );
 
         if (!res.ok) {
-          console.error(
-            "[useAuth] /auth/me failed:",
-            res.status,
-            res.statusText
-          );
           setUser(null);
           return;
         }
@@ -34,20 +30,12 @@ export function useAuth() {
         const data = await res.json();
 
         if (!data?.user) {
-          console.error(
-            "[useAuth] Invalid response:",
-            data
-          );
           setUser(null);
           return;
         }
 
         setUser(data.user);
-      } catch (err) {
-        console.error(
-          "[useAuth] Network or parsing error:",
-          err
-        );
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);

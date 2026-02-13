@@ -1,25 +1,19 @@
-const API_URL = "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export type SessionStatus =
   | "running"
   | "finished"
   | "cancelled";
 
-/**
- * Active session DTO as returned by the API
- */
 export interface ActiveSession {
   id: number;
   projectId: number | null;
   startTime: string;
   endTime?: string | null;
   description?: string | null;
-  status: SessionStatus; // always "running"
+  status: SessionStatus;
 }
 
-/**
- * Finished session DTO as returned by the API
- */
 export interface FinishedSession {
   id: number;
   projectId: number | null;
@@ -29,9 +23,6 @@ export interface FinishedSession {
   tags: string[];
 }
 
-/**
- * Load active session
- */
 export async function getActiveSession(): Promise<ActiveSession | null> {
   const res = await fetch(`${API_URL}/sessions/active`, {
     credentials: "include",
@@ -47,9 +38,6 @@ export async function getActiveSession(): Promise<ActiveSession | null> {
   return data.session;
 }
 
-/**
- * Start new session
- */
 export async function startSession(
   projectId?: number
 ): Promise<void> {
@@ -65,9 +53,6 @@ export async function startSession(
   }
 }
 
-/**
- * Finalize (save) session
- */
 export async function finalizeSession(
   sessionId: number,
   description: string,
@@ -89,9 +74,6 @@ export async function finalizeSession(
   }
 }
 
-/**
- * Cancel active session without saving
- */
 export async function cancelSession(): Promise<void> {
   const res = await fetch(`${API_URL}/sessions/cancel`, {
     method: "POST",
@@ -103,9 +85,6 @@ export async function cancelSession(): Promise<void> {
   }
 }
 
-/**
- * Load finished sessions
- */
 export async function getFinishedSessions(): Promise<FinishedSession[]> {
   const res = await fetch(`${API_URL}/sessions/finished`, {
     credentials: "include",

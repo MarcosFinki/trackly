@@ -1,32 +1,8 @@
 ---
-export const prerender = false;
-
 import AppLayout from "../layouts/AppLayout.astro";
-
-import StartStopButton from "../islands/StartStopButton";
-import StatsSummary from "../islands/StatsSummary";
-
-const cookie = Astro.request.headers.get("cookie");
-
-const res = await fetch("http://localhost:3001/sessions/active", {
-  headers: {
-    cookie: cookie ?? "",
-  },
-});
-
-if (res.status === 401) {
-  return Astro.redirect("/login");
-}
+import DashboardGate from "../islands/DashboardGate";
 ---
 
 <AppLayout title="Trackly">
-  <div class="dashboard">
-    <div class="center">
-      <StartStopButton client:load />
-    </div>
-
-    <div class="stats">
-      <StatsSummary client:load />
-    </div>
-  </div>
+  <DashboardGate client:load />
 </AppLayout>
