@@ -11,67 +11,65 @@ interface StoredProject {
 function applyTheme(color: string | null) {
   const root = document.documentElement;
 
-  if (!color) {
-    root.style.setProperty(
-      "--color-primary",
-      DEFAULT_COLOR
-    );
-    return;
-  }
-
   root.style.setProperty(
     "--color-primary",
-    color
+    color ?? DEFAULT_COLOR
   );
 }
 
 export function useActiveProject() {
-  const [project, setProject] =
-    useState<StoredProject | null>(null);
+  const [project, setProject] = useState<StoredProject | null>(null);
 
-  // 🔁 Load from storage
+  /* ===========================
+     LOAD INITIAL STATE
+  =========================== */
+
   useEffect(() => {
-    const raw = localStorage.getItem(KEY);
-
-    if (!raw) {
-      applyTheme(null);
-      return;
-    }
-
     try {
-      const parsed: StoredProject =
-        JSON.parse(raw);
+      const raw = localStorage.getItem(KEY);
 
-      setProject(parsed);
-      applyTheme(parsed.color);
+      if (!raw) {
+        applyTheme(null);
+        return;
+      }
+
+      const parsed: StoredProject = JSON.parse(raw);
+
+      if (
+        typeof parsed.id === "number" &&
+        typeof parsed.color === "string"
+      ) {
+        setProject(parsed);
+        applyTheme(parsed.color);
+      } else {
+        localStorage.removeItem(KEY);
+        applyTheme(null);
+      }
     } catch {
+      localStorage.removeItem(KEY);
       applyTheme(null);
     }
   }, []);
 
-  const selectProject = (
-    id: number | null,
-    color?: string
-  ) => {
+  /* ===========================
+     SELECT PROJECT
+  =========================== */
+
+  const selectProject = (id: number | null, color?: string) => {
     if (id === null) {
       setProject(null);
       localStorage.removeItem(KEY);
       applyTheme(null);
     } else {
-      if (!color) return;
+      if (!color) {
+        console.warn("Project color missing");
+        return;
+      }
 
-      const data: StoredProject = {
-        id,
-        color,
-      };
+      const data: StoredProject = { id, color };
 
       setProject(data);
-
-      localStorage.setItem(
-        KEY,
-        JSON.stringify(data)
-      );
-
+      localStorage.setItem(KEY, JSON.stringify(data));
       applyTheme(color);
     }
 
@@ -82,33 +80,24 @@ export function useActiveProject() {
     );
   };
 
-  // 🔁 Sync external changes
+  /* ===========================
+     EXTERNAL SYNC
+  =========================== */
+
   useEffect(() => {
     const handler = (e: Event) => {
-      const custom =
-        e as CustomEvent<{ projectId: number | null }>;
+      const custom = e as CustomEvent<{ projectId: number | null }>;
 
       if (custom.detail.projectId === null) {
         setProject(null);
         applyTheme(null);
-        return;
       }
-
-      // ⚠ Si cambian proyecto desde otro lugar
-      // pero no tenemos color, no podemos aplicar theme.
-      // En tu app no debería pasar.
     };
 
-    window.addEventListener(
-      "trackly:project-change",
-      handler
-    );
+    window.addEventListener("trackly:project-change", handler);
 
     return () =>
-      window.removeEventListener(
-        "trackly:project-change",
-        handler
-      );
+      window.removeEventListener("trackly:project-change", handler);
   }, []);
 
   return {

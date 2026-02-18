@@ -1,44 +1,29 @@
 import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.PUBLIC_API_URL;
-
-interface User {
-  id: number;
-  email: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  email_verified: boolean;
-}
+import { getCurrentUser } from "../services/authService";
+import type { PublicUser } from "../services/authService";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchMe = async () => {
       try {
-        const res = await fetch(
-          `${API_URL}/auth/me`,
-          { credentials: "include" }
-        );
+        const result: PublicUser | null = await getCurrentUser();
 
-        if (!res.ok) {
-          setUser(null);
-          return;
+        if (mounted) {
+          setUser(result);
         }
-
-        const data = await res.json();
-
-        if (!data?.user) {
-          setUser(null);
-          return;
-        }
-
-        setUser(data.user);
       } catch {
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -48,16 +33,12 @@ export function useAuth() {
       fetchMe();
     };
 
-    window.addEventListener(
-      "trackly:user-updated",
-      refresh
-    );
+    window.addEventListener("trackly:user-updated", refresh);
 
-    return () =>
-      window.removeEventListener(
-        "trackly:user-updated",
-        refresh
-      );
+    return () => {
+      mounted = false;
+      window.removeEventListener("trackly:user-updated", refresh);
+    };
   }, []);
 
   return { user, loading };

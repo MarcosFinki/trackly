@@ -1,75 +1,100 @@
-import { useEffect, useState } from "react";
-import {
-  getActiveSession,
-  startSession,
-  finalizeSession,
-  cancelSession,
-  type ActiveSession,
-} from "../services/sessionService";
-import { invalidateStats } from "./useStatsInvalidation";
+import { invoke } from "@tauri-apps/api/core";
 
-export function useSession() {
-  const [session, setSession] = useState<ActiveSession | null>(null);
-  const [loading, setLoading] = useState(true);
+/* =========================
+   TYPES
+========================= */
 
-  // 🔹 UI only
-  const [isStopping, setIsStopping] = useState(false);
+export type SessionStatus =
+  | "running"
+  | "finished"
+  | "cancelled";
 
-  const refresh = async () => {
-    const fresh = await getActiveSession();
-    setSession(fresh);
-  };
+export interface ActiveSession {
+  id: number;
+  project_id: number | null;
+  start_time: string;
+  end_time: string | null;
+  description: string | null;
+  status: SessionStatus;
+}
 
-  useEffect(() => {
-    refresh().finally(() => setLoading(false));
-  }, []);
+export interface FinishedSession {
+  id: number;
+  project_id: number | null;
+  start_time: string;
+  end_time: string;
+  description: string | null;
+  tags: string[];
+}
 
-  // ▶️ START (backend)
-  const start = async (projectId?: number) => {
-    await startSession(projectId);
-    await refresh();
-  };
+/* =========================
+   ACTIVE
+========================= */
 
-  // ⏸️ STOP (solo UI)
-  const stop = () => {
-    setIsStopping(true);
-  };
+export async function getActiveSession(): Promise<ActiveSession | null> {
+  try {
+    return await invoke<ActiveSession | null>("get_active_session");
+  } catch {
+    throw new Error("FAILED_TO_LOAD_ACTIVE_SESSION");
+  }
+}
 
-  // ❌ Cancelar modal → seguir sesión
-  const cancelStop = () => {
-    setIsStopping(false);
-  };
+/* =========================
+   START
+========================= */
 
-  // ✅ Guardar sesión
-  const confirmFinalize = async (
-    description: string,
-    tags: string[]
-  ) => {
-    if (!session) return;
+export async function startSession(
+  projectId?: number
+): Promise<void> {
+  try {
+    await invoke("start_session", {
+      project_id: projectId ?? null,
+    });
+  } catch {
+    throw new Error("FAILED_TO_START_SESSION");
+  }
+}
 
-    await finalizeSession(session.id, description, tags);
-    setSession(null);
-    setIsStopping(false);
-    invalidateStats();
-  };
+/* =========================
+   FINALIZE
+========================= */
 
-  // ❌ Cancelar sesión sin guardar (backend)
-  const cancel = async () => {
-    if (!session) return;
+export async function finalizeSession(
+  sessionId: number,
+  description: string,
+  tags: string[]
+): Promise<void> {
+  try {
+    await invoke("finalize_session", {
+      session_id: sessionId,
+      description,
+      tags,
+    });
+  } catch {
+    throw new Error("FAILED_TO_FINALIZE_SESSION");
+  }
+}
 
-    await cancelSession();
-    setSession(null);
-    setIsStopping(false);
-  };
+/* =========================
+   CANCEL
+========================= */
 
-  return {
-    session,
-    loading,
-    isStopping,
-    start,
-    stop,
-    cancel,
-    cancelStop,
-    confirmFinalize,
-  };
+export async function cancelSession(): Promise<void> {
+  try {
+    await invoke("cancel_session");
+  } catch {
+    throw new Error("FAILED_TO_CANCEL_SESSION");
+  }
+}
+
+/* =========================
+   FINISHED
+========================= */
+
+export async function getFinishedSessions(): Promise<FinishedSession[]> {
+  try {
+    return await invoke<FinishedSession[]>("get_finished_sessions");
+  } catch {
+    throw new Error("FAILED_TO_LOAD_FINISHED_SESSIONS");
+  }
 }

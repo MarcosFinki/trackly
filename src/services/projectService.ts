@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { invoke } from "@tauri-apps/api/core";
 
 export interface Project {
   id: number;
@@ -7,35 +7,24 @@ export interface Project {
 }
 
 export async function getProjects(): Promise<Project[]> {
-  const res = await fetch(`${API_URL}/projects`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) {
+  try {
+    return await invoke<Project[]>("get_projects");
+  } catch {
     throw new Error("FAILED_TO_LOAD_PROJECTS");
   }
-
-  const data = await res.json();
-  return data.projects;
 }
 
 export async function createProject(
   name: string,
   color: string
 ): Promise<Project> {
-  const res = await fetch(`${API_URL}/projects`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ name, color }),
-  });
-
-  if (!res.ok) {
+  try {
+    return await invoke<Project>("create_project", {
+      input: { name, color },
+    });
+  } catch {
     throw new Error("FAILED_TO_CREATE_PROJECT");
   }
-
-  const data = await res.json();
-  return data.project;
 }
 
 export async function updateProject(
@@ -45,17 +34,11 @@ export async function updateProject(
     color?: string;
   }
 ): Promise<void> {
-  const res = await fetch(
-    `${API_URL}/projects/${id}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(updates),
-    }
-  );
-
-  if (!res.ok) {
+  try {
+    await invoke("update_project", {
+      input: { id, ...updates },
+    });
+  } catch {
     throw new Error("FAILED_TO_UPDATE_PROJECT");
   }
 }
@@ -63,15 +46,9 @@ export async function updateProject(
 export async function deleteProject(
   id: number
 ): Promise<void> {
-  const res = await fetch(
-    `${API_URL}/projects/${id}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    }
-  );
-
-  if (!res.ok) {
+  try {
+    await invoke("delete_project", { id });
+  } catch {
     throw new Error("FAILED_TO_DELETE_PROJECT");
   }
 }

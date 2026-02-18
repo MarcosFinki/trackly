@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { invoke } from "@tauri-apps/api/core";
 
 export type SessionStatus =
   | "running"
@@ -23,77 +23,70 @@ export interface FinishedSession {
   tags: string[];
 }
 
-export async function getActiveSession(): Promise<ActiveSession | null> {
-  const res = await fetch(`${API_URL}/sessions/active`, {
-    credentials: "include",
-  });
+/* =========================
+   ACTIVE
+========================= */
 
-  if (!res.ok) {
+export async function getActiveSession(): Promise<ActiveSession | null> {
+  try {
+    return await invoke<ActiveSession | null>("get_active_session");
+  } catch {
     throw new Error("FAILED_TO_LOAD_ACTIVE_SESSION");
   }
-
-  const data = await res.json();
-
-  if (!data.active) return null;
-  return data.session;
 }
+
+/* =========================
+   START
+========================= */
 
 export async function startSession(
   projectId?: number
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/sessions/start`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ projectId }),
-  });
-
-  if (!res.ok) {
+  try {
+    await invoke("start_session", { projectId });
+  } catch {
     throw new Error("FAILED_TO_START_SESSION");
   }
 }
+
+/* =========================
+   FINALIZE
+========================= */
 
 export async function finalizeSession(
   sessionId: number,
   description: string,
   tags: string[]
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/sessions/finalize`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      sessionId,
-      description,
-      tags,
-    }),
-  });
-
-  if (!res.ok) {
+  try {
+    await invoke("finalize_session", {
+      input: { sessionId, description, tags },
+    });
+  } catch {
     throw new Error("FAILED_TO_FINALIZE_SESSION");
   }
 }
 
-export async function cancelSession(): Promise<void> {
-  const res = await fetch(`${API_URL}/sessions/cancel`, {
-    method: "POST",
-    credentials: "include",
-  });
+/* =========================
+   CANCEL
+========================= */
 
-  if (!res.ok) {
+export async function cancelSession(): Promise<void> {
+  try {
+    await invoke("cancel_session");
+  } catch {
     throw new Error("FAILED_TO_CANCEL_SESSION");
   }
 }
 
-export async function getFinishedSessions(): Promise<FinishedSession[]> {
-  const res = await fetch(`${API_URL}/sessions/finished`, {
-    credentials: "include",
-  });
+/* =========================
+   FINISHED
+========================= */
 
-  if (!res.ok) {
+export async function getFinishedSessions(): Promise<FinishedSession[]> {
+  try {
+    return await invoke<FinishedSession[]>("get_finished_sessions");
+  } catch {
     throw new Error("FAILED_TO_LOAD_FINISHED_SESSIONS");
   }
-
-  const data = await res.json();
-  return data.sessions;
 }

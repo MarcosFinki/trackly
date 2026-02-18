@@ -1,14 +1,30 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { invoke } from "@tauri-apps/api/core";
 
-export async function login(email: string, password: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, password }),
-  });
+/* =========================
+   Types
+========================= */
 
-  if (!res.ok) {
+export interface PublicUser {
+  id: number;
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  email_verified?: boolean;
+}
+
+/* =========================
+   AUTH
+========================= */
+
+export async function login(
+  email: string,
+  password: string
+): Promise<PublicUser> {
+  try {
+    return await invoke<PublicUser>("login", {
+      input: { email, password },
+    });
+  } catch {
     throw new Error("INVALID_CREDENTIALS");
   }
 }
@@ -16,42 +32,65 @@ export async function login(email: string, password: string): Promise<void> {
 export async function register(
   email: string,
   password: string
-): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!res.ok) {
-    if (res.status === 409) {
-      throw new Error("USER_EXISTS");
-    }
-
+): Promise<PublicUser> {
+  try {
+    return await invoke<PublicUser>("register_user", {
+      input: { email, password },
+    });
+  } catch {
     throw new Error("REGISTER_FAILED");
   }
 }
 
+export async function getCurrentUser(): Promise<PublicUser | null> {
+  try {
+    return await invoke<PublicUser>("get_current_user");
+  } catch {
+    return null;
+  }
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await invoke("logout_user");
+  } catch {
+    // noop
+  }
+}
+
+/* =========================
+   UPDATE PROFILE
+========================= */
+
 export async function updateProfile(data: {
   display_name?: string;
-  avatar_url?: string;
   email?: string;
   password?: string;
   current_password?: string;
-}) {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json?.error || "UPDATE_FAILED");
+}): Promise<PublicUser> {
+  try {
+    return await invoke<PublicUser>("update_user_profile", {
+      input: data,
+    });
+  } catch (err: any) {
+    throw new Error(err?.message || "UPDATE_FAILED");
   }
+}
 
-  return json;
+/* =========================
+   AVATAR UPLOAD
+========================= */
+
+export async function uploadAvatar(
+  file: File
+): Promise<string> {
+  try {
+    const bytes = await file.arrayBuffer();
+
+    return await invoke<string>("upload_avatar", {
+      bytes: Array.from(new Uint8Array(bytes)),
+    });
+  } catch {
+    throw new Error("UPLOAD_FAILED");
+  }
 }

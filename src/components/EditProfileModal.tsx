@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import ProfilePreviewCard from "./ProfilePreviewCard";
-import { updateProfile } from "../services/authService";
+import {
+  updateProfile,
+  uploadAvatar,
+  logout,
+} from "../services/authService";
 import "./EditProfileModal.css";
-
-const API_URL = import.meta.env.PUBLIC_API_URL;
 
 type EditableProfile = {
   display_name: string;
@@ -23,28 +25,26 @@ export default function EditProfileModal({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const [avatarPreview, setAvatarPreview] =
-    useState<string | null>(null);
-
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
-
-  const [profile, setProfile] =
-    useState<EditableProfile>({
-      display_name: "",
-      email: "",
-      avatar_url: "",
-      password: "",
-      current_password: "",
-    });
+  const [profile, setProfile] = useState<EditableProfile>({
+    display_name: "",
+    email: "",
+    avatar_url: "",
+    password: "",
+    current_password: "",
+  });
 
   const [initialProfile, setInitialProfile] =
     useState<EditableProfile | null>(null);
 
+  /* ===========================
+     LOAD INITIAL DATA
+  =========================== */
+
   useEffect(() => {
-    if (!user) return;
-    if (initialProfile) return;
+    if (!user || initialProfile) return;
 
     const data: EditableProfile = {
       display_name: user.display_name ?? "",
@@ -58,7 +58,6 @@ export default function EditProfileModal({
     setInitialProfile(data);
   }, [user, initialProfile]);
 
-  // Cleanup blob URL
   useEffect(() => {
     return () => {
       if (avatarPreview) {
@@ -67,9 +66,11 @@ export default function EditProfileModal({
     };
   }, [avatarPreview]);
 
-  if (loading || !user || !initialProfile) {
-    return null;
-  }
+  if (loading || !user || !initialProfile) return null;
+
+  /* ===========================
+     VALIDATION
+  =========================== */
 
   const passwordFlowInvalid =
     profile.password.length > 0 &&
@@ -78,7 +79,6 @@ export default function EditProfileModal({
   const hasChanges =
     (profile.display_name !== initialProfile.display_name ||
       profile.email !== initialProfile.email ||
-      profile.avatar_url !== initialProfile.avatar_url ||
       selectedFile !== null ||
       profile.password.length > 0) &&
     !passwordFlowInvalid;
@@ -91,11 +91,8 @@ export default function EditProfileModal({
       current_password?: string;
     } = {};
 
-    if (
-      profile.display_name !== initialProfile.display_name
-    ) {
-      payload.display_name =
-        profile.display_name.trim();
+    if (profile.display_name !== initialProfile.display_name) {
+      payload.display_name = profile.display_name.trim();
     }
 
     if (profile.email !== initialProfile.email) {
@@ -104,82 +101,51 @@ export default function EditProfileModal({
 
     if (profile.password.length > 0) {
       payload.password = profile.password;
-      payload.current_password =
-        profile.current_password;
+      payload.current_password = profile.current_password;
     }
 
     return payload;
   };
+
+  /* ===========================
+     SAVE
+  =========================== */
 
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
 
-      let avatarPath = profile.avatar_url;
-
-      // 📤 Upload avatar si hay archivo nuevo
+      // 📤 Avatar upload vía Tauri
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("avatar", selectedFile);
-
-        const res = await fetch(
-          `${API_URL}/auth/me/avatar`,
-          {
-            method: "POST",
-            credentials: "include",
-            body: formData,
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("UPLOAD_FAILED");
-        }
-
-        const data = await res.json();
-        avatarPath = data.avatar_url;
+        await uploadAvatar(selectedFile);
       }
 
       const payload = buildPayload();
 
-      await updateProfile(payload);
+      if (Object.keys(payload).length > 0) {
+        await updateProfile(payload);
+      }
 
-      // 🔐 Si cambió contraseña → logout forzado
+      // 🔐 Si cambió contraseña → logout
       if (profile.password.length > 0) {
-        await fetch(
-          `${API_URL}/auth/logout`,
-          {
-            method: "POST",
-            credentials: "include",
-          }
-        );
-
+        await logout();
         window.location.href = "/login";
         return;
       }
 
       onClose();
-
-      window.dispatchEvent(
-        new Event("trackly:user-updated")
-      );
+      window.dispatchEvent(new Event("trackly:user-updated"));
     } catch (err: any) {
-      if (
-        err?.message ===
-        "Current password incorrect"
-      ) {
-        setError(
-          "La contraseña actual es incorrecta"
-        );
-      } else {
-        setError(
-          "No se pudo guardar el perfil"
-        );
-      }
+      setError("No se pudo guardar el perfil");
     } finally {
       setSaving(false);
     }
   };
+
+  /* ===========================
+     UI
+  =========================== */
 
   return (
     <div className="modal-overlay">
@@ -187,8 +153,7 @@ export default function EditProfileModal({
         <ProfilePreviewCard
           profile={{
             ...profile,
-            avatar_url:
-              avatarPreview || profile.avatar_url,
+            avatar_url: avatarPreview || profile.avatar_url,
           }}
         />
 
@@ -212,9 +177,7 @@ export default function EditProfileModal({
                   return;
                 }
 
-                const localUrl =
-                  URL.createObjectURL(file);
-
+                const localUrl = URL.createObjectURL(file);
                 setAvatarPreview(localUrl);
                 setSelectedFile(file);
               }}
@@ -226,10 +189,7 @@ export default function EditProfileModal({
             <input
               value={profile.display_name}
               onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  display_name: e.target.value,
-                })
+                setProfile({ ...profile, display_name: e.target.value })
               }
             />
           </label>
@@ -239,10 +199,7 @@ export default function EditProfileModal({
             <input
               value={profile.email}
               onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  email: e.target.value,
-                })
+                setProfile({ ...profile, email: e.target.value })
               }
             />
           </label>
@@ -252,13 +209,9 @@ export default function EditProfileModal({
             <input
               type="password"
               autoComplete="new-password"
-              placeholder="Nueva contraseña"
               value={profile.password}
               onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  password: e.target.value,
-                })
+                setProfile({ ...profile, password: e.target.value })
               }
             />
           </label>
@@ -269,40 +222,20 @@ export default function EditProfileModal({
               <input
                 type="password"
                 autoComplete="current-password"
-                placeholder="Contraseña actual"
                 value={profile.current_password}
                 onChange={(e) =>
                   setProfile({
                     ...profile,
-                    current_password:
-                      e.target.value,
+                    current_password: e.target.value,
                   })
                 }
               />
             </label>
           )}
-
-          {passwordFlowInvalid && (
-            <div
-              style={{
-                color: "#ff6b6b",
-                fontSize: "0.7rem",
-                marginTop: "4px",
-              }}
-            >
-              Debes ingresar tu contraseña actual
-            </div>
-          )}
         </div>
 
         {error && (
-          <div
-            style={{
-              color: "#ff6b6b",
-              fontSize: "0.75rem",
-              marginTop: "0.5rem",
-            }}
-          >
+          <div style={{ color: "#ff6b6b", fontSize: "0.75rem" }}>
             {error}
           </div>
         )}
