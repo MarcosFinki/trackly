@@ -6,16 +6,17 @@ import StatsSummary from "./StatsSummary";
 export default function DashboardGate() {
   const { user, loading } = useAuth();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = "/login";
+    }
+  }, [loading, user]);
+
   if (loading) {
     return <div style={{ padding: "2rem" }}>Loading...</div>;
   }
 
-  useEffect(() => {
-  if (!loading && !user) {
-    window.location.href = "/login";
-  }
-}, [loading, user]);
-
+  if (!user) return null;
 
   return (
     <div className="dashboard">

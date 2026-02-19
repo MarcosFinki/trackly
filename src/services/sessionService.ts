@@ -1,5 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 
+/* =========================
+   TYPES
+========================= */
+
 export type SessionStatus =
   | "running"
   | "finished"
@@ -7,18 +11,18 @@ export type SessionStatus =
 
 export interface ActiveSession {
   id: number;
-  projectId: number | null;
-  startTime: string;
-  endTime?: string | null;
-  description?: string | null;
+  project_id: number | null;
+  start_time: string;
+  end_time: string | null;
+  description: string | null;
   status: SessionStatus;
 }
 
 export interface FinishedSession {
   id: number;
-  projectId: number | null;
-  startTime: string;
-  endTime: string;
+  project_id: number | null;
+  start_time: string;
+  end_time: string;
   description: string | null;
   tags: string[];
 }
@@ -31,7 +35,7 @@ export async function getActiveSession(): Promise<ActiveSession | null> {
   try {
     return await invoke<ActiveSession | null>("get_active_session");
   } catch {
-    throw new Error("FAILED_TO_LOAD_ACTIVE_SESSION");
+    return null; // no autenticado o no session
   }
 }
 
@@ -43,7 +47,9 @@ export async function startSession(
   projectId?: number
 ): Promise<void> {
   try {
-    await invoke("start_session", { projectId });
+    await invoke("start_session", {
+      project_id: projectId ?? null,
+    });
   } catch {
     throw new Error("FAILED_TO_START_SESSION");
   }
@@ -60,7 +66,9 @@ export async function finalizeSession(
 ): Promise<void> {
   try {
     await invoke("finalize_session", {
-      input: { sessionId, description, tags },
+      session_id: sessionId,
+      description,
+      tags,
     });
   } catch {
     throw new Error("FAILED_TO_FINALIZE_SESSION");

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { logout } from "../services/authService";
 import "./UserMenu.css";
 import EditProfileModal from "./EditProfileModal";
-
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 export default function UserMenu() {
   const { user } = useAuth();
@@ -11,6 +11,8 @@ export default function UserMenu() {
   const [closing, setClosing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const [showEdit, setShowEdit] = useState(false);
+
+  
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -24,6 +26,10 @@ export default function UserMenu() {
   }, []);
 
   if (!user) return null;
+
+  const avatarSrc = user.avatar_url
+  ? convertFileSrc(user.avatar_url)
+  : null;
 
   const initials =
     user.display_name?.[0]?.toUpperCase() ??
@@ -43,15 +49,10 @@ export default function UserMenu() {
         className="user-trigger"
         onClick={() => (open ? close() : setOpen(true))}
       >
-        {user.avatar_url ? (
-          <img
-            src={`${API_URL}${user.avatar_url}-thumb.webp`}
-            alt="avatar"
-          />
+        {avatarSrc ? (
+          <img src={avatarSrc} alt="avatar" />
         ) : (
-          <div className="avatar-fallback">
-            {initials}
-          </div>
+          <div className="avatar-fallback">{initials}</div>
         )}
 
         <span className="user-name">
@@ -79,14 +80,7 @@ export default function UserMenu() {
           <button
             className="logout"
             onClick={async () => {
-              await fetch(
-                `${API_URL}/auth/logout`,
-                {
-                  method: "POST",
-                  credentials: "include",
-                }
-              );
-
+              await logout();
               window.location.href = "/login";
             }}
           >
