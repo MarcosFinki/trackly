@@ -9,11 +9,11 @@ import {
 import "./EditProfileModal.css";
 
 type EditableProfile = {
-  display_name: string;
+  displayName: string;
   email: string;
-  avatar_url: string;
+  avatarUrl: string;
   password: string;
-  current_password: string;
+  currentPassword: string;
 };
 
 export default function EditProfileModal({
@@ -29,11 +29,11 @@ export default function EditProfileModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [profile, setProfile] = useState<EditableProfile>({
-    display_name: "",
+    displayName: "",
     email: "",
-    avatar_url: "",
+    avatarUrl: "",
     password: "",
-    current_password: "",
+    currentPassword: "",
   });
 
   const [initialProfile, setInitialProfile] =
@@ -47,11 +47,11 @@ export default function EditProfileModal({
     if (!user || initialProfile) return;
 
     const data: EditableProfile = {
-      display_name: user.display_name ?? "",
+      displayName: user.displayName ?? "",
       email: user.email,
-      avatar_url: user.avatar_url ?? "",
+      avatarUrl: user.avatarUrl ?? "",
       password: "",
-      current_password: "",
+      currentPassword: "",
     };
 
     setProfile(data);
@@ -74,10 +74,10 @@ export default function EditProfileModal({
 
   const passwordFlowInvalid =
     profile.password.length > 0 &&
-    profile.current_password.length === 0;
+    profile.currentPassword.length === 0;
 
   const hasChanges =
-    (profile.display_name !== initialProfile.display_name ||
+    (profile.displayName !== initialProfile.displayName ||
       profile.email !== initialProfile.email ||
       selectedFile !== null ||
       profile.password.length > 0) &&
@@ -85,14 +85,14 @@ export default function EditProfileModal({
 
   const buildPayload = () => {
     const payload: {
-      display_name?: string;
+      displayName?: string;
       email?: string;
       password?: string;
-      current_password?: string;
+      currentPassword?: string;
     } = {};
 
-    if (profile.display_name !== initialProfile.display_name) {
-      payload.display_name = profile.display_name.trim();
+    if (profile.displayName !== initialProfile.displayName) {
+      payload.displayName = profile.displayName.trim();
     }
 
     if (profile.email !== initialProfile.email) {
@@ -101,7 +101,7 @@ export default function EditProfileModal({
 
     if (profile.password.length > 0) {
       payload.password = profile.password;
-      payload.current_password = profile.current_password;
+      payload.currentPassword = profile.currentPassword;
     }
 
     return payload;
@@ -116,7 +116,6 @@ export default function EditProfileModal({
       setSaving(true);
       setError(null);
 
-      // 📤 Avatar upload vía Tauri
       if (selectedFile) {
         await uploadAvatar(selectedFile);
       }
@@ -127,7 +126,6 @@ export default function EditProfileModal({
         await updateProfile(payload);
       }
 
-      // 🔐 Si cambió contraseña → logout
       if (profile.password.length > 0) {
         await logout();
         window.location.href = "/login";
@@ -136,7 +134,7 @@ export default function EditProfileModal({
 
       onClose();
       window.dispatchEvent(new Event("trackly:user-updated"));
-    } catch (err: any) {
+    } catch {
       setError("No se pudo guardar el perfil");
     } finally {
       setSaving(false);
@@ -153,7 +151,7 @@ export default function EditProfileModal({
         <ProfilePreviewCard
           profile={{
             ...profile,
-            avatar_url: avatarPreview || profile.avatar_url,
+            avatarUrl: avatarPreview || profile.avatarUrl,
           }}
         />
 
@@ -187,9 +185,9 @@ export default function EditProfileModal({
           <label>
             Usuario
             <input
-              value={profile.display_name}
+              value={profile.displayName}
               onChange={(e) =>
-                setProfile({ ...profile, display_name: e.target.value })
+                setProfile({ ...profile, displayName: e.target.value })
               }
             />
           </label>
@@ -222,11 +220,11 @@ export default function EditProfileModal({
               <input
                 type="password"
                 autoComplete="current-password"
-                value={profile.current_password}
+                value={profile.currentPassword}
                 onChange={(e) =>
                   setProfile({
                     ...profile,
-                    current_password: e.target.value,
+                    currentPassword: e.target.value,
                   })
                 }
               />

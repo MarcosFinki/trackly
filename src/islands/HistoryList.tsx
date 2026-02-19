@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getFinishedSessions } from "../services/sessionService";
 import { adaptFinishedSessionsFromApi } from "../infra/adapters/sessionAdapter";
-import type { FinishedSession } from "../types/finishedSession";
 import "./HistoryList.css";
+import type { FinishedSession } from "../types/session";
 
 export default function HistoryList() {
   const [sessions, setSessions] = useState<FinishedSession[]>([]);

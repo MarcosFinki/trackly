@@ -1,31 +1,30 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { Project } from "../types/project";
 
-export interface Project {
-  id: number;
-  name: string;
-  color: string;
-}
+/* =========================
+   GET
+========================= */
 
 export async function getProjects(): Promise<Project[]> {
-  try {
-    return await invoke<Project[]>("get_projects");
-  } catch {
-    throw new Error("FAILED_TO_LOAD_PROJECTS");
-  }
+  return await invoke<Project[]>("get_projects");
 }
+
+/* =========================
+   CREATE
+========================= */
 
 export async function createProject(
   name: string,
   color: string
 ): Promise<Project> {
-  try {
-    return await invoke<Project>("create_project", {
-      input: { name, color },
-    });
-  } catch {
-    throw new Error("FAILED_TO_CREATE_PROJECT");
-  }
+  return await invoke<Project>("create_project", {
+    input: { name, color },
+  });
 }
+
+/* =========================
+   UPDATE
+========================= */
 
 export async function updateProject(
   id: number,
@@ -34,21 +33,17 @@ export async function updateProject(
     color?: string;
   }
 ): Promise<void> {
-  try {
-    await invoke("update_project", {
-      input: { id, ...updates },
-    });
-  } catch {
-    throw new Error("FAILED_TO_UPDATE_PROJECT");
-  }
+  await invoke("update_project", {
+    input: { id, ...updates },
+  });
 }
+
+/* =========================
+   DELETE
+========================= */
 
 export async function deleteProject(
   id: number
 ): Promise<void> {
-  try {
-    await invoke("delete_project", { id });
-  } catch {
-    throw new Error("FAILED_TO_DELETE_PROJECT");
-  }
+  await invoke("delete_project", { id });
 }

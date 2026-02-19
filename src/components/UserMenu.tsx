@@ -7,12 +7,16 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 
 export default function UserMenu() {
   const { user } = useAuth();
+
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const [showEdit, setShowEdit] = useState(false);
 
-  
+  const ref = useRef<HTMLDivElement>(null);
+
+  /* =========================
+     OUTSIDE CLICK
+  ========================== */
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -20,20 +24,26 @@ export default function UserMenu() {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handler);
-    return () =>
+    return () => {
       document.removeEventListener("mousedown", handler);
+    };
   }, []);
 
   if (!user) return null;
 
-  const avatarSrc = user.avatar_url
-  ? convertFileSrc(user.avatar_url)
-  : null;
+  /* =========================
+     DATA (camelCase)
+  ========================== */
+
+  const avatarSrc = user.avatarUrl
+    ? convertFileSrc(user.avatarUrl)
+    : null;
 
   const initials =
-    user.display_name?.[0]?.toUpperCase() ??
-    user.email[0].toUpperCase();
+    user.displayName?.[0]?.toUpperCase() ??
+    user.email[0]?.toUpperCase();
 
   const close = () => {
     setClosing(true);
@@ -42,6 +52,10 @@ export default function UserMenu() {
       setClosing(false);
     }, 220);
   };
+
+  /* =========================
+     RENDER
+  ========================== */
 
   return (
     <div className="user-menu" ref={ref}>
@@ -56,7 +70,7 @@ export default function UserMenu() {
         )}
 
         <span className="user-name">
-          {user.display_name ?? user.email}
+          {user.displayName ?? user.email}
         </span>
       </button>
 

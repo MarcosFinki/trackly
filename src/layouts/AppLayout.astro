@@ -1,5 +1,5 @@
 ---
-import SidebarShell from "../islands/SidebarShell";
+import AppRoot from "../islands/AppRoot";
 const { title = "Trackly" } = Astro.props;
 ---
 
@@ -12,8 +12,6 @@ const { title = "Trackly" } = Astro.props;
   </head>
 
   <body>
-    <SidebarShell client:load>
-      <slot />
-    </SidebarShell>
+    <AppRoot client:load />
   </body>
 </html>

@@ -1,61 +1,38 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { PublicUserDTO } from "../types/user.dto";
 
 /* =========================
-   Types
-========================= */
-
-export interface PublicUser {
-  id: number;
-  email: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  email_verified?: boolean;
-}
-
-/* =========================
-   AUTH
+   AUTH (DTO ONLY)
 ========================= */
 
 export async function login(
   email: string,
   password: string
-): Promise<PublicUser> {
-  try {
-    return await invoke<PublicUser>("login", {
-      input: { email, password },
-    });
-  } catch {
-    throw new Error("INVALID_CREDENTIALS");
-  }
+): Promise<PublicUserDTO> {
+  return await invoke<PublicUserDTO>("login", {
+    input: { email, password },
+  });
 }
 
 export async function register(
   email: string,
   password: string
-): Promise<PublicUser> {
-  try {
-    return await invoke<PublicUser>("register_user", {
-      input: { email, password },
-    });
-  } catch {
-    throw new Error("REGISTER_FAILED");
-  }
+): Promise<PublicUserDTO> {
+  return await invoke<PublicUserDTO>("register_user", {
+    input: { email, password },
+  });
 }
 
-export async function getCurrentUser(): Promise<PublicUser | null> {
+export async function getCurrentUser(): Promise<PublicUserDTO | null> {
   try {
-    return await invoke<PublicUser>("get_current_user");
+    return await invoke<PublicUserDTO>("get_current_user");
   } catch {
     return null;
   }
 }
 
 export async function logout(): Promise<void> {
-  try {
-    await invoke("logout_user");
-  } catch {
-    // noop
-  }
+  await invoke("logout_user");
 }
 
 /* =========================
@@ -63,18 +40,21 @@ export async function logout(): Promise<void> {
 ========================= */
 
 export async function updateProfile(data: {
-  display_name?: string;
+  displayName?: string;
   email?: string;
   password?: string;
-  current_password?: string;
-}): Promise<PublicUser> {
-  try {
-    return await invoke<PublicUser>("update_user_profile", {
-      input: data,
-    });
-  } catch (err: any) {
-    throw new Error(err?.message || "UPDATE_FAILED");
-  }
+  currentPassword?: string;
+}): Promise<PublicUserDTO> {
+  const payload = {
+    display_name: data.displayName,
+    email: data.email,
+    password: data.password,
+    current_password: data.currentPassword,
+  };
+
+  return await invoke<PublicUserDTO>("update_user_profile", {
+    input: payload,
+  });
 }
 
 /* =========================
@@ -84,13 +64,9 @@ export async function updateProfile(data: {
 export async function uploadAvatar(
   file: File
 ): Promise<string> {
-  try {
-    const bytes = await file.arrayBuffer();
+  const bytes = await file.arrayBuffer();
 
-    return await invoke<string>("upload_avatar", {
-      bytes: Array.from(new Uint8Array(bytes)),
-    });
-  } catch {
-    throw new Error("UPLOAD_FAILED");
-  }
+  return await invoke<string>("upload_avatar", {
+    bytes: Array.from(new Uint8Array(bytes)),
+  });
 }

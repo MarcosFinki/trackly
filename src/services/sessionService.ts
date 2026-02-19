@@ -1,41 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
+import type {
+  ActiveSessionDTO,
+  FinishedSessionDTO,
+} from "../types/session.dto";
 
 /* =========================
-   TYPES
+   ACTIVE (DTO)
 ========================= */
 
-export type SessionStatus =
-  | "running"
-  | "finished"
-  | "cancelled";
-
-export interface ActiveSession {
-  id: number;
-  project_id: number | null;
-  start_time: string;
-  end_time: string | null;
-  description: string | null;
-  status: SessionStatus;
-}
-
-export interface FinishedSession {
-  id: number;
-  project_id: number | null;
-  start_time: string;
-  end_time: string;
-  description: string | null;
-  tags: string[];
-}
-
-/* =========================
-   ACTIVE
-========================= */
-
-export async function getActiveSession(): Promise<ActiveSession | null> {
+export async function getActiveSession(): Promise<ActiveSessionDTO | null> {
   try {
-    return await invoke<ActiveSession | null>("get_active_session");
+    return await invoke<ActiveSessionDTO | null>("get_active_session");
   } catch {
-    return null; // no autenticado o no session
+    return null;
   }
 }
 
@@ -46,13 +23,9 @@ export async function getActiveSession(): Promise<ActiveSession | null> {
 export async function startSession(
   projectId?: number
 ): Promise<void> {
-  try {
-    await invoke("start_session", {
-      project_id: projectId ?? null,
-    });
-  } catch {
-    throw new Error("FAILED_TO_START_SESSION");
-  }
+  await invoke("start_session", {
+    project_id: projectId ?? null,
+  });
 }
 
 /* =========================
@@ -64,15 +37,11 @@ export async function finalizeSession(
   description: string,
   tags: string[]
 ): Promise<void> {
-  try {
-    await invoke("finalize_session", {
-      session_id: sessionId,
-      description,
-      tags,
-    });
-  } catch {
-    throw new Error("FAILED_TO_FINALIZE_SESSION");
-  }
+  await invoke("finalize_session", {
+    session_id: sessionId,
+    description,
+    tags,
+  });
 }
 
 /* =========================
@@ -80,21 +49,13 @@ export async function finalizeSession(
 ========================= */
 
 export async function cancelSession(): Promise<void> {
-  try {
-    await invoke("cancel_session");
-  } catch {
-    throw new Error("FAILED_TO_CANCEL_SESSION");
-  }
+  await invoke("cancel_session");
 }
 
 /* =========================
-   FINISHED
+   FINISHED (DTO)
 ========================= */
 
-export async function getFinishedSessions(): Promise<FinishedSession[]> {
-  try {
-    return await invoke<FinishedSession[]>("get_finished_sessions");
-  } catch {
-    throw new Error("FAILED_TO_LOAD_FINISHED_SESSIONS");
-  }
+export async function getFinishedSessions(): Promise<FinishedSessionDTO[]> {
+  return await invoke<FinishedSessionDTO[]>("get_finished_sessions");
 }

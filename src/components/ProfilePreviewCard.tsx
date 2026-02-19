@@ -6,20 +6,20 @@ export default function ProfilePreviewCard({
   profile,
 }: {
   profile: {
-    display_name: string;
+    displayName: string;
     email: string;
-    avatar_url: string;
+    avatarUrl: string;
     password: string;
   };
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const initials =
-    profile.display_name?.[0]?.toUpperCase() ??
-    profile.email[0].toUpperCase();
+    profile.displayName?.[0]?.toUpperCase() ??
+    profile.email[0]?.toUpperCase();
 
-  const avatarSrc = profile.avatar_url
-    ? convertFileSrc(profile.avatar_url)
+  const avatarSrc = profile.avatarUrl
+    ? convertFileSrc(profile.avatarUrl)
     : null;
 
   return (
@@ -33,7 +33,7 @@ export default function ProfilePreviewCard({
       </div>
 
       <div className="info">
-        <strong>{profile.display_name || "—"}</strong>
+        <strong>{profile.displayName || "—"}</strong>
         <span>{profile.email}</span>
 
         <div className="password-line">

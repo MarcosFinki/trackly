@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { getCurrentUser } from "../services/authService";
-import type { PublicUser } from "../services/authService";
+
+import type { PublicUser } from "../types/user";
+import type { PublicUserDTO } from "../types/user.dto";
+
+import { adaptUserFromApi } from "../infra/adapters/userAdapter";
 
 export function useAuth() {
   const [user, setUser] = useState<PublicUser | null>(null);
@@ -11,10 +15,14 @@ export function useAuth() {
 
     const fetchMe = async () => {
       try {
-        const result: PublicUser | null = await getCurrentUser();
+        const dto: PublicUserDTO | null = await getCurrentUser();
 
-        if (mounted) {
-          setUser(result);
+        if (!mounted) return;
+
+        if (!dto) {
+          setUser(null);
+        } else {
+          setUser(adaptUserFromApi(dto));
         }
       } catch {
         if (mounted) {

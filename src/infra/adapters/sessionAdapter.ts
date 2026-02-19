@@ -1,24 +1,54 @@
 import type {
-  FinishedSession as ApiFinishedSession,
-} from "../../services/sessionService";
+  ActiveSessionDTO,
+  FinishedSessionDTO,
+} from "../../types/session.dto";
 
 import type {
+  ActiveSession,
   FinishedSession,
-} from "../../types/finishedSession";
+} from "../../types/session";
 
-/**
- * Adapts finished sessions coming from the API (DTO)
- * into frontend-friendly domain types.
- */
+/* =========================
+   Helpers
+========================= */
+
+function parseDate(value: string | null): Date | null {
+  if (!value) return null;
+
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+/* =========================
+   Active
+========================= */
+
+export function adaptActiveSessionFromApi(
+  dto: ActiveSessionDTO
+): ActiveSession {
+  return {
+    id: dto.id,
+    projectId: dto.project_id,
+    startTime: parseDate(dto.start_time) ?? new Date(0), // fallback seguro
+    endTime: parseDate(dto.end_time),
+    description: dto.description ?? null,
+    status: dto.status,
+  };
+}
+
+/* =========================
+   Finished
+========================= */
+
 export function adaptFinishedSessionsFromApi(
-  sessions: ApiFinishedSession[]
+  dtos: FinishedSessionDTO[]
 ): FinishedSession[] {
-  return sessions.map((s) => ({
-    id: s.id,
-    projectId: s.projectId,
-    startTime: new Date(s.startTime),
-    endTime: new Date(s.endTime),
-    description: s.description,
-    tags: s.tags,
+  return dtos.map((dto) => ({
+    id: dto.id,
+    projectId: dto.project_id,
+    startTime: parseDate(dto.start_time) ?? new Date(0),
+    endTime: parseDate(dto.end_time) ?? new Date(0),
+    description: dto.description ?? null,
+    tags: dto.tags ?? [],
   }));
 }
