@@ -10,11 +10,6 @@ use argon2::{
 };
 use rand_core::OsRng;
 
-use std::fs;
-use std::path::Path;
-use uuid::Uuid;
-use image::ImageFormat;
-
 use tauri::AppHandle;
 use tauri::Manager;
 
@@ -107,6 +102,16 @@ pub fn login_user(
 
     let mut current = state.current_user_id.lock().unwrap();
     *current = Some(user.id);
+
+    let db = get_db();
+    let conn = db.lock().unwrap();
+
+    conn.execute(
+        "INSERT OR REPLACE INTO app_session (id, user_id)
+        VALUES (1, ?1)",
+        params![user.id],
+    )
+    .map_err(|e| e.to_string())?;
 
     Ok(user.into())
 }
@@ -259,6 +264,32 @@ pub fn upload_avatar_internal(
     println!("AVATAR SAVED AT: {}", absolute_path);
 
     Ok(absolute_path)
+}
+
+/* ===========================
+   LOGOUT
+=========================== */
+
+pub fn logout_user(state: State<AppState>) -> Result<(), String> {
+    // 🔥 Limpiar memoria
+    {
+        let mut current = state.current_user_id.lock().unwrap();
+        *current = None;
+    }
+
+    // 🔥 Limpiar persistencia
+    let db = get_db();
+    let conn = db.lock().unwrap();
+
+    conn.execute("DELETE FROM app_session WHERE id = 1", [])
+        .map_err(|e| {
+            eprintln!("[LOGOUT_DB_ERROR] {:?}", e);
+            e.to_string()
+        })?;
+
+    println!("[LOGOUT] Session cleared");
+
+    Ok(())
 }
 
 /* ===========================

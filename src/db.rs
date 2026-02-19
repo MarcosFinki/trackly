@@ -45,6 +45,11 @@ static DB: Lazy<Mutex<Connection>> = Lazy::new(|| {
             session_id INTEGER NOT NULL,
             tag TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS app_session (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            user_id INTEGER NOT NULL
+        );
         "
     ).expect("failed to create schema");
 

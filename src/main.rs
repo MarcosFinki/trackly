@@ -18,9 +18,9 @@ use commands::auth::{
     register_user,
     login,
     get_current_user,
-    logout_user,
     update_user_profile,
     upload_avatar,
+    logout_user_command,
 };
 
 /* ===========================
@@ -45,20 +45,41 @@ use commands::sessions::{
     cancel_session,
     get_finished_sessions,
 };
+use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
             current_user_id: Mutex::new(None),
         })
+        .setup(|app| {
+            let state = app.state::<AppState>();
+
+            let db = crate::db::get_db();
+            let conn = db.lock().unwrap();
+
+            let result: Result<i64, _> = conn.query_row(
+                "SELECT user_id FROM app_session WHERE id = 1",
+                [],
+                |row| row.get(0),
+            );
+
+            if let Ok(user_id) = result {
+                let mut current = state.current_user_id.lock().unwrap();
+                *current = Some(user_id);
+                println!("SESSION RESTORED FOR USER {}", user_id);
+            }
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             // AUTH
             register_user,
             login,
             get_current_user,
-            logout_user,
             update_user_profile,
             upload_avatar,
+            logout_user_command,
 
             // PROJECTS
             get_projects,

@@ -8,6 +8,7 @@ use crate::services::user_service::{
     get_user_by_id,
     update_user_profile_internal,
     upload_avatar_internal,
+    logout_user,
 };
 use crate::models::user::PublicUser;
 
@@ -142,12 +143,8 @@ pub fn upload_avatar(
 =========================== */
 
 #[command]
-pub fn logout_user(
+pub fn logout_user_command(
     state: State<AppState>,
 ) -> Result<(), String> {
-
-    let mut current = state.current_user_id.lock().unwrap();
-    *current = None;
-
-    Ok(())
+    logout_user(state)
 }
