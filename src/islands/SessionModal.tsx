@@ -15,6 +15,8 @@ const AVAILABLE_TAGS = [
 ];
 
 export default function SessionModal({ onConfirm, onCancel }: Props) {
+
+
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [closing, setClosing] = useState(false);
@@ -62,18 +64,21 @@ export default function SessionModal({ onConfirm, onCancel }: Props) {
     if (closing) onCancel();
   };
 
+
   return (
+
+    
     <div
       className={`session-overlay ${
         closing ? "overlay-out" : "overlay-in"
       }`}
       onClick={handleCancel}
     >
-      <form
+      
+      <div
         className={`session-modal ${
           closing ? "modal-out" : "modal-in"
         }`}
-        onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={handleAnimationEnd}
       >
@@ -112,11 +117,18 @@ export default function SessionModal({ onConfirm, onCancel }: Props) {
           <button type="button" onClick={handleCancel}>
             Cancel
           </button>
-          <button type="submit" disabled={!canConfirm}>
+          <button
+            type="button"
+            disabled={!canConfirm}
+            onClick={() => {
+              if (!canConfirm || closing) return;
+              onConfirm(description.trim(), selectedTags);
+            }}
+          >
             Save session
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

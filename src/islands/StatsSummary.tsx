@@ -9,12 +9,14 @@ import {
 import TagBarChart from "./TagBarChart";
 import { useProjects } from "../context/ProjectsContext";
 import type { FinishedSession } from "../types/session";
+import { useStatsInvalidation } from "../hooks/useStatsInvalidation";
 
 export default function StatsSummary() {
   const [sessions, setSessions] = useState<FinishedSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   const { activeProjectId } = useProjects();
+  const statsVersion = useStatsInvalidation();
 
   useEffect(() => {
     const load = async () => {
@@ -41,7 +43,7 @@ export default function StatsSummary() {
     };
 
     load();
-  }, [activeProjectId]);
+  }, [activeProjectId, statsVersion]);
 
   if (loading) return <p>Loading stats…</p>;
   if (sessions.length === 0) return <p>No data yet.</p>;

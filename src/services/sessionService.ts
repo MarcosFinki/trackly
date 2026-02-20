@@ -24,7 +24,7 @@ export async function startSession(
   projectId?: number
 ): Promise<void> {
   await invoke("start_session", {
-    project_id: projectId ?? null,
+    projectId: projectId ?? null,
   });
 }
 
@@ -38,7 +38,7 @@ export async function finalizeSession(
   tags: string[]
 ): Promise<void> {
   await invoke("finalize_session", {
-    session_id: sessionId,
+    sessionId,
     description,
     tags,
   });

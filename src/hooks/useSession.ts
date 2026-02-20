@@ -81,14 +81,17 @@ export function useSession() {
     description: string,
     tags: string[]
   ) => {
-    if (!session) return;
+
+    if (!session) {
+      return;
+    }
 
     try {
       await finalizeSession(session.id, description, tags);
 
-      setSession(null);
-      setIsStopping(false);
+      await refresh(); // 👈 importante
 
+      setIsStopping(false);
       invalidateStats();
     } catch (err) {
       console.error("[SESSION_FINALIZE_ERROR]", err);
