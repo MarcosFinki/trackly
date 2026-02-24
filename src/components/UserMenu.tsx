@@ -94,8 +94,12 @@ export default function UserMenu() {
           <button
             className="logout"
             onClick={async () => {
-              await logout();
-              window.location.href = "/login";
+              try {
+                await logout();
+                window.location.href = "/login";
+              } catch (e) {
+                console.error("LOGOUT ERROR", e);
+              }
             }}
           >
             Cerrar sesión

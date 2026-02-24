@@ -19,7 +19,9 @@ export default function ProfilePreviewCard({
     profile.email[0]?.toUpperCase();
 
   const avatarSrc = profile.avatarUrl
-    ? convertFileSrc(profile.avatarUrl)
+    ? profile.avatarUrl.startsWith("blob:")
+      ? profile.avatarUrl
+      : convertFileSrc(profile.avatarUrl)
     : null;
 
   return (

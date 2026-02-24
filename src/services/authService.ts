@@ -32,7 +32,7 @@ export async function getCurrentUser(): Promise<PublicUserDTO | null> {
 }
 
 export async function logout(): Promise<void> {
-  await invoke("logout_user");
+  await invoke("logout_user_command");
 }
 
 /* =========================
