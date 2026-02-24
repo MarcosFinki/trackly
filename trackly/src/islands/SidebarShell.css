@@ -1,0 +1,74 @@
+/* ---------- Sidebar Shell ---------- */
+
+.app-header {
+  position: relative;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
+  overflow: hidden;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.header-title-wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  max-width: calc(100% - 200px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+
+.app-main {
+  height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Overlay */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 90;
+}
+
+/* Drawer */
+
+.sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  transform: translateX(-100%);
+  transition: transform 220ms ease;
+  z-index: 100;
+}
+
+.sidebar-drawer.open {
+  transform: translateX(0);
+}
+
+.hamburger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -1,0 +1,21 @@
+---
+const { title = "Trackly" } = Astro.props;
+import "../styles/global.css";
+import "../styles/components.css";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{title}</title>
+  </head>
+
+  <body>
+    <main
+      style="min-height:100vh;display:flex;align-items:center;justify-content:center;"
+    >
+      <slot />
+    </main>
+  </body>
+</html>

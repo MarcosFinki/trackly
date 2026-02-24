@@ -1,0 +1,135 @@
+.sidebar {
+  width: 240px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+
+  /* ---------- Sidebar header ---------- */
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.sidebar-header span {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+}
+
+/* ---------- Close button ---------- */
+
+.sidebar-header button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.sidebar-header button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-header button:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+/* CONTENT (la única zona flexible) */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+/* Footer FIJO */
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Botón */
+.new-project-btn {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  border: 1px dashed var(--color-primary);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* ---------- Project buttons ---------- */
+
+.project-list {
+  list-style: none;
+  padding: 0 0.5rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-btn {
+  width: calc(100% - 1rem);   /* 👈 no ocupa todo */
+  margin: 0 auto;             /* 👈 centrado */
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.project-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ACTIVO */
+.project-btn.active {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 500;
+}
+
+.project-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.project-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.project-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  transition: opacity 120ms ease;
+}
+
+.project-actions button:hover {
+  opacity: 1;
+}

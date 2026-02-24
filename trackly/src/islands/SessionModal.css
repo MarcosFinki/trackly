@@ -1,0 +1,135 @@
+/* ---------- Overlay ---------- */
+
+.session-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  animation: overlayFadeIn 180ms ease-out forwards;
+}
+
+.session-overlay.overlay-out {
+  animation: overlayFadeOut 180ms ease-in forwards;
+}
+
+/* ---------- Modal ---------- */
+
+.session-modal {
+  background-color: var(--color-bg);
+  padding: 1.5rem;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  animation: modalIn 180ms ease-out forwards;
+}
+
+.session-modal.modal-out {
+  animation: modalOut 180ms ease-in forwards;
+}
+
+/* ---------- Fields ---------- */
+
+.session-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-field textarea {
+  resize: vertical;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+/* FOCUS dinámico con el color del proyecto */
+.session-field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* ---------- Tags ---------- */
+
+.session-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.session-tag {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  background: transparent;
+  transition: background-color 120ms, color 120ms;
+}
+
+.session-tag.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* ---------- Actions ---------- */
+
+.session-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
