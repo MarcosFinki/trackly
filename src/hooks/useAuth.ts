@@ -1,44 +1,37 @@
 import { useEffect, useState } from "react";
+import { getCurrentUser } from "../services/authService";
 
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import type { PublicUser } from "../types/user";
+import type { PublicUserDTO } from "../types/user.dto";
 
-interface User {
-  id: number;
-  email: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  email_verified: boolean;
-}
+import { adaptUserFromApi } from "../infra/adapters/userAdapter";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchMe = async () => {
       try {
-        const res = await fetch(
-          `${API_URL}/auth/me`,
-          { credentials: "include" }
-        );
+        const dto: PublicUserDTO | null = await getCurrentUser();
 
-        if (!res.ok) {
+        if (!mounted) return;
+
+        if (!dto) {
           setUser(null);
-          return;
+        } else {
+          setUser(adaptUserFromApi(dto));
         }
-
-        const data = await res.json();
-
-        if (!data?.user) {
-          setUser(null);
-          return;
-        }
-
-        setUser(data.user);
       } catch {
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -48,16 +41,12 @@ export function useAuth() {
       fetchMe();
     };
 
-    window.addEventListener(
-      "trackly:user-updated",
-      refresh
-    );
+    window.addEventListener("trackly:user-updated", refresh);
 
-    return () =>
-      window.removeEventListener(
-        "trackly:user-updated",
-        refresh
-      );
+    return () => {
+      mounted = false;
+      window.removeEventListener("trackly:user-updated", refresh);
+    };
   }, []);
 
   return { user, loading };

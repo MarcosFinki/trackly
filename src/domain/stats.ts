@@ -1,11 +1,5 @@
-/**
- * Minimal contract required for stats calculations
- */
-export interface SessionForStats {
-  startTime: Date;
-  endTime: Date;
-  tags: string[];
-}
+import type { SessionForStats } from "./stats.types";
+
 
 /**
  * Filter sessions that ended in the last N days

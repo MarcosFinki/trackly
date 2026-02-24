@@ -1,43 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 import StartStopButton from "./StartStopButton";
 import StatsSummary from "./StatsSummary";
 
-const API_URL = import.meta.env.PUBLIC_API_URL;
-
 export default function DashboardGate() {
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const res = await fetch(`${API_URL}/sessions/active`, {
-          credentials: "include",
-        });
+    if (!loading && !user) {
+      window.location.href = "/login";
+    }
+  }, [loading, user]);
 
-        if (res.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        setAuthorized(true);
-      } catch {
-        window.location.href = "/login";
-      }
-    };
-
-    checkSession();
-  }, []);
-
-  if (authorized === null) {
+  if (loading) {
     return <div style={{ padding: "2rem" }}>Loading...</div>;
   }
+
+  if (!user) return null;
 
   return (
     <div className="dashboard">
       <div className="center">
         <StartStopButton />
       </div>
-
       <div className="stats">
         <StatsSummary />
       </div>

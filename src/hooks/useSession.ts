@@ -1,65 +1,118 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getActiveSession,
   startSession,
   finalizeSession,
   cancelSession,
-  type ActiveSession,
 } from "../services/sessionService";
+
+import {
+  adaptActiveSessionFromApi,
+} from "../infra/adapters/sessionAdapter";
+
+import type { ActiveSession } from "../types/session";
+
 import { invalidateStats } from "./useStatsInvalidation";
 
 export function useSession() {
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // 🔹 UI only
   const [isStopping, setIsStopping] = useState(false);
 
-  const refresh = async () => {
-    const fresh = await getActiveSession();
-    setSession(fresh);
-  };
+  /* =========================
+     REFRESH (DTO → DOMAIN)
+  ========================== */
+
+  const refresh = useCallback(async () => {
+    try {
+      const dto = await getActiveSession();
+
+      if (!dto) {
+        setSession(null);
+        return;
+      }
+
+      const adapted = adaptActiveSessionFromApi(dto);
+      setSession(adapted);
+    } catch (err) {
+      console.error("[SESSION_REFRESH_ERROR]", err);
+      setSession(null);
+    }
+  }, []);
+
+  /* =========================
+     INITIAL LOAD
+  ========================== */
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-  }, []);
+  }, [refresh]);
 
-  // ▶️ START (backend)
+  /* =========================
+     START
+  ========================== */
+
   const start = async (projectId?: number) => {
-    await startSession(projectId);
-    await refresh();
+    try {
+      await startSession(projectId);
+      await refresh();
+    } catch (err) {
+      console.error("[SESSION_START_ERROR]", err);
+    }
   };
 
-  // ⏸️ STOP (solo UI)
+  /* =========================
+     STOP (UI ONLY)
+  ========================== */
+
   const stop = () => {
     setIsStopping(true);
   };
 
-  // ❌ Cancelar modal → seguir sesión
   const cancelStop = () => {
     setIsStopping(false);
   };
 
-  // ✅ Guardar sesión
+  /* =========================
+     FINALIZE
+  ========================== */
+
   const confirmFinalize = async (
     description: string,
     tags: string[]
   ) => {
-    if (!session) return;
 
-    await finalizeSession(session.id, description, tags);
-    setSession(null);
-    setIsStopping(false);
-    invalidateStats();
+    if (!session) {
+      return;
+    }
+
+    try {
+      await finalizeSession(session.id, description, tags);
+
+      await refresh(); // 👈 importante
+
+      setIsStopping(false);
+      invalidateStats();
+    } catch (err) {
+      console.error("[SESSION_FINALIZE_ERROR]", err);
+    }
   };
 
-  // ❌ Cancelar sesión sin guardar (backend)
+  /* =========================
+     CANCEL
+  ========================== */
+
   const cancel = async () => {
     if (!session) return;
 
-    await cancelSession();
-    setSession(null);
-    setIsStopping(false);
+    try {
+      await cancelSession();
+
+      setSession(null);
+      setIsStopping(false);
+    } catch (err) {
+      console.error("[SESSION_CANCEL_ERROR]", err);
+    }
   };
 
   return {

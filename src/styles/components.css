@@ -1,0 +1,21 @@
+/* styles/components.css */
+
+@import "../components/AllTagsModal.css";
+@import "../components/AuthForm.css";
+@import "../components/ColorPicker.css";
+@import "../components/ConfirmModal.css";
+@import "../components/EditProfileModal.css";
+@import "../components/HeaderTitle.css";
+@import "../components/ProfilePreviewCard.css";
+@import "../components/SessionTimer.css";
+@import "../components/UserMenu.css";
+
+@import "../islands/HistoryList.css";
+@import "../islands/ProjectModal.css";
+@import "../islands/SessionModal.css";
+@import "../islands/Sidebar.css";
+@import "../islands/SidebarShell.css";
+@import "../islands/StartStopButton.css";
+@import "../islands/TagBarChart.css";
+
+

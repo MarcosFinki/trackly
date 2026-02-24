@@ -1,42 +1,30 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { invoke } from "@tauri-apps/api/core";
+import type { Project } from "../types/project";
 
-export interface Project {
-  id: number;
-  name: string;
-  color: string;
-}
+/* =========================
+   GET
+========================= */
 
 export async function getProjects(): Promise<Project[]> {
-  const res = await fetch(`${API_URL}/projects`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    throw new Error("FAILED_TO_LOAD_PROJECTS");
-  }
-
-  const data = await res.json();
-  return data.projects;
+  return await invoke<Project[]>("get_projects");
 }
+
+/* =========================
+   CREATE
+========================= */
 
 export async function createProject(
   name: string,
   color: string
 ): Promise<Project> {
-  const res = await fetch(`${API_URL}/projects`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ name, color }),
+  return await invoke<Project>("create_project", {
+    input: { name, color },
   });
-
-  if (!res.ok) {
-    throw new Error("FAILED_TO_CREATE_PROJECT");
-  }
-
-  const data = await res.json();
-  return data.project;
 }
+
+/* =========================
+   UPDATE
+========================= */
 
 export async function updateProject(
   id: number,
@@ -45,33 +33,17 @@ export async function updateProject(
     color?: string;
   }
 ): Promise<void> {
-  const res = await fetch(
-    `${API_URL}/projects/${id}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(updates),
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("FAILED_TO_UPDATE_PROJECT");
-  }
+  await invoke("update_project", {
+    input: { id, ...updates },
+  });
 }
+
+/* =========================
+   DELETE
+========================= */
 
 export async function deleteProject(
   id: number
 ): Promise<void> {
-  const res = await fetch(
-    `${API_URL}/projects/${id}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("FAILED_TO_DELETE_PROJECT");
-  }
+  await invoke("delete_project", { id });
 }

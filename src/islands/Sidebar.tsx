@@ -1,15 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  getProjects,
-  deleteProject,
-  updateProject,
-  type Project,
-} from "../services/projectService";
-import { useActiveProject } from "../hooks/useActiveProject";
+import { useProjects } from "../context/ProjectsContext";
 import ProjectModal from "../islands/ProjectModal";
-import "./Sidebar.css";
 import ConfirmModal from "../components/ConfirmModal";
+import "./Sidebar.css";
 
 export default function Sidebar({
   onClose,
@@ -18,31 +12,20 @@ export default function Sidebar({
   onClose: () => void;
   onCreateProject: () => void;
 }) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [editing, setEditing] = useState<Project | null>(null);
+  const {
+    projects,
+    activeProjectId,
+    selectProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
 
-  const [toDelete, setToDelete] = useState<Project | null>(null);
+  const [editing, setEditing] = useState<typeof projects[number] | null>(null);
+  const [toDelete, setToDelete] = useState<typeof projects[number] | null>(null);
 
-  const { projectId, selectProject } = useActiveProject();
-
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = () => {
-    getProjects().then(setProjects);
-  };
-
-  const handleSelectProject = (
-    id: number | null,
-    color?: string
-  ) => {
-    selectProject(id, color);
+  const handleSelectProject = (id: number | null) => {
+    selectProject(id);
     onClose();
-  };
-
-  const handleDelete = (project: Project) => {
-    setToDelete(project);
   };
 
   return (
@@ -55,43 +38,37 @@ export default function Sidebar({
 
         <div className="sidebar-content">
           <ul className="project-list">
+            {/* GLOBAL */}
             <li>
               <button
                 className={
-                  !projectId
+                  !activeProjectId
                     ? "project-btn active"
                     : "project-btn"
                 }
-                onClick={() =>
-                  handleSelectProject(null)
-                }
+                onClick={() => handleSelectProject(null)}
               >
                 Global
               </button>
             </li>
 
+            {/* PROJECTS */}
             {projects.map((p) => (
               <li key={p.id}>
                 <div className="project-item">
                   <button
                     className={
-                      projectId === p.id
+                      activeProjectId === p.id
                         ? "project-btn active"
                         : "project-btn"
                     }
-                    onClick={() =>
-                      handleSelectProject(
-                        p.id,
-                        p.color
-                      )
-                    }
+                    onClick={() => handleSelectProject(p.id)}
                   >
                     <div className="project-row">
                       <span
                         className="project-dot"
                         style={{
-                          backgroundColor:
-                            p.color,
+                          backgroundColor: p.color,
                         }}
                       />
                       {p.name}
@@ -99,19 +76,11 @@ export default function Sidebar({
                   </button>
 
                   <div className="project-actions">
-                    <button
-                      onClick={() =>
-                        setEditing(p)
-                      }
-                    >
+                    <button onClick={() => setEditing(p)}>
                       ✏
                     </button>
 
-                    <button
-                      onClick={() =>
-                        handleDelete(p)
-                      }
-                    >
+                    <button onClick={() => setToDelete(p)}>
                       🗑
                     </button>
                   </div>
@@ -131,7 +100,7 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* 🔥 MODAL CON PORTAL */}
+      {/* EDIT MODAL */}
       {editing &&
         createPortal(
           <ProjectModal
@@ -144,39 +113,27 @@ export default function Sidebar({
                 color,
               });
 
-              if (projectId === editing.id) {
-                selectProject(editing.id, color);
-              }
-
               setEditing(null);
-              loadProjects();
             }}
-            onCancel={() =>
-              setEditing(null)
-            }
+            onCancel={() => setEditing(null)}
           />,
           document.body
         )}
 
-        {toDelete && (
-          <ConfirmModal
-            title="Delete project"
-            message={`Are you sure you want to delete "${toDelete.name}"? This cannot be undone.`}
-            confirmLabel="Delete"
-            cancelLabel="Cancel"
-            onCancel={() => setToDelete(null)}
-            onConfirm={async () => {
-              await deleteProject(toDelete.id);
-
-              if (projectId === toDelete.id) {
-                selectProject(null);
-              }
-
-              setToDelete(null);
-              loadProjects();
-            }}
-          />
-        )}
+      {/* DELETE CONFIRM */}
+      {toDelete && (
+        <ConfirmModal
+          title="Delete project"
+          message={`Are you sure you want to delete "${toDelete.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onCancel={() => setToDelete(null)}
+          onConfirm={async () => {
+            await deleteProject(toDelete.id);
+            setToDelete(null);
+          }}
+        />
+      )}
     </>
   );
 }

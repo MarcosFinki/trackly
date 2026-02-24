@@ -1,57 +1,72 @@
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { invoke } from "@tauri-apps/api/core";
+import type { PublicUserDTO } from "../types/user.dto";
 
-export async function login(email: string, password: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, password }),
+/* =========================
+   AUTH (DTO ONLY)
+========================= */
+
+export async function login(
+  email: string,
+  password: string
+): Promise<PublicUserDTO> {
+  return await invoke<PublicUserDTO>("login", {
+    input: { email, password },
   });
-
-  if (!res.ok) {
-    throw new Error("INVALID_CREDENTIALS");
-  }
 }
 
 export async function register(
   email: string,
   password: string
-): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, password }),
+): Promise<PublicUserDTO> {
+  return await invoke<PublicUserDTO>("register_user", {
+    input: { email, password },
   });
+}
 
-  if (!res.ok) {
-    if (res.status === 409) {
-      throw new Error("USER_EXISTS");
-    }
-
-    throw new Error("REGISTER_FAILED");
+export async function getCurrentUser(): Promise<PublicUserDTO | null> {
+  try {
+    return await invoke<PublicUserDTO>("get_current_user");
+  } catch {
+    return null;
   }
 }
 
+export async function logout(): Promise<void> {
+  await invoke("logout_user_command");
+}
+
+/* =========================
+   UPDATE PROFILE
+========================= */
+
 export async function updateProfile(data: {
-  display_name?: string;
-  avatar_url?: string;
+  displayName?: string;
   email?: string;
   password?: string;
-  current_password?: string;
-}) {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
+  currentPassword?: string;
+}): Promise<PublicUserDTO> {
+  const payload = {
+    display_name: data.displayName,
+    email: data.email,
+    password: data.password,
+    current_password: data.currentPassword,
+  };
+
+  return await invoke<PublicUserDTO>("update_user_profile", {
+    input: payload,
   });
+}
 
-  const json = await res.json();
+/* =========================
+   AVATAR UPLOAD
+========================= */
 
-  if (!res.ok) {
-    throw new Error(json?.error || "UPDATE_FAILED");
-  }
+export async function uploadAvatar(
+  file: File
+): Promise<string> {
+  const bytes = await file.arrayBuffer();
 
-  return json;
+  return await invoke<string>("upload_avatar", {
+    bytes: Array.from(new Uint8Array(bytes)),
+  });
 }

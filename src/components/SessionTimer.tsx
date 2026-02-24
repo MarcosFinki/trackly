@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { ActiveSession } from "../services/sessionService";
 import "./SessionTimer.css";
+import type { ActiveSession } from "../types/session";
 
 interface Props {
   session: ActiveSession;

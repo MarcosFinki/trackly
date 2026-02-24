@@ -2,37 +2,48 @@ import "./StatsSummary.css";
 import { useEffect, useState } from "react";
 import { getFinishedSessions } from "../services/sessionService";
 import { adaptFinishedSessionsFromApi } from "../infra/adapters/sessionAdapter";
-import type { FinishedSession } from "../types/finishedSession";
 import {
   getSessionsInLastDays,
   getTotalDurationMs,
 } from "../domain/stats";
 import TagBarChart from "./TagBarChart";
-import { useActiveProject } from "../hooks/useActiveProject";
+import { useProjects } from "../context/ProjectsContext";
+import type { FinishedSession } from "../types/session";
 import { useStatsInvalidation } from "../hooks/useStatsInvalidation";
 
 export default function StatsSummary() {
   const [sessions, setSessions] = useState<FinishedSession[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { projectId } = useActiveProject();
+  const { activeProjectId } = useProjects();
   const statsVersion = useStatsInvalidation();
 
   useEffect(() => {
-    setLoading(true);
+    const load = async () => {
+      setLoading(true);
 
-    getFinishedSessions()
-      .then(adaptFinishedSessionsFromApi)
-      .then((all) => {
+      try {
+        const all = await getFinishedSessions()
+          .then(adaptFinishedSessionsFromApi);
+
         const filtered =
-          projectId == null
+          activeProjectId == null
             ? all
-            : all.filter((s) => s.projectId === projectId);
+            : all.filter(
+                (s) => s.projectId === activeProjectId
+              );
 
         setSessions(filtered);
-      })
-      .finally(() => setLoading(false));
-  }, [projectId, statsVersion]);
+      } catch (e) {
+        console.error("STATS_LOAD_ERROR", e);
+        setSessions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [activeProjectId, statsVersion]);
 
   if (loading) return <p>Loading stats…</p>;
   if (sessions.length === 0) return <p>No data yet.</p>;
@@ -69,7 +80,8 @@ function StatCard({
       </header>
 
       <p className="stat-meta">
-        {sessions.length} session{sessions.length !== 1 ? "s" : ""}
+        {sessions.length} session
+        {sessions.length !== 1 ? "s" : ""}
       </p>
 
       {sessions.length > 0 && (

@@ -1,51 +1,41 @@
 import { useState } from "react";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import "./ProfilePreviewCard.css";
-
-const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export default function ProfilePreviewCard({
   profile,
 }: {
   profile: {
-    display_name: string;
+    displayName: string;
     email: string;
-    avatar_url: string;
+    avatarUrl: string;
     password: string;
   };
 }) {
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const initials =
-    profile.display_name?.[0]?.toUpperCase() ??
-    profile.email[0].toUpperCase();
+    profile.displayName?.[0]?.toUpperCase() ??
+    profile.email[0]?.toUpperCase();
 
-  const avatarSrc = profile.avatar_url
-    ? profile.avatar_url.startsWith("blob:")
-      ? profile.avatar_url
-      : `${API_URL}${profile.avatar_url}.webp`
+  const avatarSrc = profile.avatarUrl
+    ? profile.avatarUrl.startsWith("blob:")
+      ? profile.avatarUrl
+      : convertFileSrc(profile.avatarUrl)
     : null;
 
   return (
     <div className="profile-preview">
       <div className="profile-preview-avatar">
         {avatarSrc ? (
-          <img
-            key={avatarSrc}
-            src={avatarSrc}
-            alt="Avatar"
-          />
+          <img src={avatarSrc} alt="avatar" />
         ) : (
-          <div className="avatar-fallback">
-            {initials}
-          </div>
+          <div className="avatar-fallback">{initials}</div>
         )}
       </div>
 
       <div className="info">
-        <strong>
-          {profile.display_name || "—"}
-        </strong>
+        <strong>{profile.displayName || "—"}</strong>
         <span>{profile.email}</span>
 
         <div className="password-line">
@@ -54,19 +44,15 @@ export default function ProfilePreviewCard({
               ? showPassword
                 ? profile.password
                 : "••••••••"
-              : "Contraseña no modificada"}
+              : "Contraseña no modificada"}
           </span>
 
           {profile.password && (
             <button
               type="button"
-              onClick={() =>
-                setShowPassword((v) => !v)
-              }
+              onClick={() => setShowPassword((v) => !v)}
             >
-              {showPassword
-                ? "Ocultar"
-                : "Ver"}
+              {showPassword ? "Ocultar" : "Ver"}
             </button>
           )}
         </div>

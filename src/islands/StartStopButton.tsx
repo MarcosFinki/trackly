@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "../hooks/useSession";
 import SessionTimer from "../components/SessionTimer";
 import SessionModal from "./SessionModal";
-import { useActiveProject } from "../hooks/useActiveProject";
-import { useProject } from "../hooks/useProject";
+import { useProjects } from "../context/ProjectsContext";
 import "./StartStopButton.css";
 
 export default function StartStopButton() {
@@ -18,8 +17,7 @@ export default function StartStopButton() {
     confirmFinalize,
   } = useSession();
 
-  const { projectId } = useActiveProject();
-  const project = useProject(projectId);
+  const { activeProject, activeProjectId } = useProjects();
 
   const isRunning = !!session;
 
@@ -40,9 +38,9 @@ export default function StartStopButton() {
 
   const handleClick = () => {
     if (isRunning) {
-      stop(); // solo UI
+      stop();
     } else {
-      start(projectId ?? undefined);
+      start(activeProjectId ?? undefined);
     }
   };
 
@@ -52,10 +50,14 @@ export default function StartStopButton() {
     <>
       <div className="session-center">
         <span className="active-project">
-          {project ? project.name : "Global"}
+          {activeProject ? activeProject.name : "Global"}
         </span>
 
-        <div className={`session-button-wrapper ${isRunning ? "running" : ""}`}>
+        <div
+          className={`session-button-wrapper ${
+            isRunning ? "running" : ""
+          }`}
+        >
           <button
             onClick={handleClick}
             disabled={isStopping}
@@ -71,7 +73,9 @@ export default function StartStopButton() {
             {isRunning ? (
               <div className="session-button-content">
                 <SessionTimer session={session} />
-                <span className="stop-label">Stop session</span>
+                <span className="stop-label">
+                  Stop session
+                </span>
               </div>
             ) : (
               "Start session"

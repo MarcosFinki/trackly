@@ -1,10 +1,4 @@
-export type TimerStatus = "running" | "paused";
-
-export interface SessionTimerState {
-  startTime: Date;
-  pausedAt: Date | null;
-  status: TimerStatus;
-}
+import type { SessionTimerState } from "./session.types";
 
 export function startTimer(startTime: Date): SessionTimerState {
   return {

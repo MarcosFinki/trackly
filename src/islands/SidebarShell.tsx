@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import "./SidebarShell.css";
 import ProjectModal from "./ProjectModal";
-import { createProject } from "../services/projectService";
-import { useActiveProject } from "../hooks/useActiveProject";
 import HeaderTitle from "../components/HeaderTitle";
 import UserMenu from "../components/UserMenu";
+import { useProjects } from "../context/ProjectsContext";
 
 export default function SidebarShell({
   children,
@@ -16,22 +15,26 @@ export default function SidebarShell({
   const [showCreateProject, setShowCreateProject] =
     useState(false);
 
-  const { selectProject } = useActiveProject();
+  const { createProject } = useProjects();
 
-  // 🔒 Bloquear scroll cuando modal abierto
+  /* ===========================
+     LOCK SCROLL WHEN MODAL OPEN
+  =========================== */
+
   useEffect(() => {
-    if (showCreateProject) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = showCreateProject
+      ? "hidden"
+      : "";
 
     return () => {
       document.body.style.overflow = "";
     };
   }, [showCreateProject]);
 
-  // ⌨ Escape solo cierra sidebar si NO hay modal
+  /* ===========================
+     ESC KEY HANDLER
+  =========================== */
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -45,27 +48,27 @@ export default function SidebarShell({
       window.removeEventListener("keydown", handler);
   }, [showCreateProject]);
 
+  /* ===========================
+     CREATE PROJECT
+  =========================== */
+
   const handleCreateProject = async (
     name: string,
     color: string
   ) => {
-    const project = await createProject(
-      name,
-      color
-    );
+    try {
+      await createProject(name, color);
 
-    // seleccionar nuevo proyecto
-    selectProject(project.id, project.color);
-
-    // cerrar todo correctamente
-    setShowCreateProject(false);
-    setOpen(false);
-
-    // notificar sidebar
-    window.dispatchEvent(
-      new Event("trackly:projects-changed")
-    );
+      setShowCreateProject(false);
+      setOpen(false);
+    } catch (e) {
+      console.error("CREATE_PROJECT_ERROR", e);
+    }
   };
+
+  /* ===========================
+     RENDER
+  =========================== */
 
   return (
     <>

@@ -1,16 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { logout } from "../services/authService";
 import "./UserMenu.css";
 import EditProfileModal from "./EditProfileModal";
-
-const API_URL = import.meta.env.PUBLIC_API_URL;
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 export default function UserMenu() {
   const { user } = useAuth();
+
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const [showEdit, setShowEdit] = useState(false);
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  /* =========================
+     OUTSIDE CLICK
+  ========================== */
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -18,16 +24,26 @@ export default function UserMenu() {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handler);
-    return () =>
+    return () => {
       document.removeEventListener("mousedown", handler);
+    };
   }, []);
 
   if (!user) return null;
 
+  /* =========================
+     DATA (camelCase)
+  ========================== */
+
+  const avatarSrc = user.avatarUrl
+    ? convertFileSrc(user.avatarUrl)
+    : null;
+
   const initials =
-    user.display_name?.[0]?.toUpperCase() ??
-    user.email[0].toUpperCase();
+    user.displayName?.[0]?.toUpperCase() ??
+    user.email[0]?.toUpperCase();
 
   const close = () => {
     setClosing(true);
@@ -37,25 +53,24 @@ export default function UserMenu() {
     }, 220);
   };
 
+  /* =========================
+     RENDER
+  ========================== */
+
   return (
     <div className="user-menu" ref={ref}>
       <button
         className="user-trigger"
         onClick={() => (open ? close() : setOpen(true))}
       >
-        {user.avatar_url ? (
-          <img
-            src={`${API_URL}${user.avatar_url}-thumb.webp`}
-            alt="avatar"
-          />
+        {avatarSrc ? (
+          <img src={avatarSrc} alt="avatar" />
         ) : (
-          <div className="avatar-fallback">
-            {initials}
-          </div>
+          <div className="avatar-fallback">{initials}</div>
         )}
 
         <span className="user-name">
-          {user.display_name ?? user.email}
+          {user.displayName ?? user.email}
         </span>
       </button>
 
@@ -79,15 +94,12 @@ export default function UserMenu() {
           <button
             className="logout"
             onClick={async () => {
-              await fetch(
-                `${API_URL}/auth/logout`,
-                {
-                  method: "POST",
-                  credentials: "include",
-                }
-              );
-
-              window.location.href = "/login";
+              try {
+                await logout();
+                window.location.href = "/login";
+              } catch (e) {
+                console.error("LOGOUT ERROR", e);
+              }
             }}
           >
             Cerrar sesión

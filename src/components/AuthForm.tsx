@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./AuthForm.css";
-import { login, register } from "../services/authService";
+import { login, register, getCurrentUser } from "../services/authService";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -13,21 +13,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
 
   const isLogin = mode === "login";
-  const API_URL = import.meta.env.PUBLIC_API_URL;
 
-  // 🔐 Redirect automático si ya está logueado
+  // 🔐 Redirect si ya está logueado (Tauri)
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const res = await fetch(`${API_URL}/auth/me`, {
-          credentials: "include",
-        });
-
-        if (res.ok) {
-          window.location.href = "/";
-        }
-      } catch {
-        // Ignoramos error de red
+      const user = await getCurrentUser();
+      if (user) {
+        window.location.href = "/";
       }
     };
 
