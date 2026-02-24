@@ -1,0 +1,71 @@
+use rusqlite::Connection;
+use std::sync::Mutex;
+use tauri::AppHandle;
+use tauri::Manager;
+
+pub struct Database {
+    pub conn: Mutex<Connection>,
+}
+
+impl Database {
+    pub fn new(app: &AppHandle) -> Self {
+        let mut path = app.path().app_data_dir().expect("no app data dir");
+        std::fs::create_dir_all(&path).expect("failed to create app data dir");
+        path.push("trackly.db");
+
+        let conn = Connection::open(path)
+            .expect("failed to open database");
+
+        conn.execute_batch(
+            "
+            PRAGMA journal_mode = WAL;
+            PRAGMA foreign_keys = ON;
+
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                display_name TEXT,
+                avatar_url TEXT,
+                email_verified INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                color TEXT NOT NULL DEFAULT '#2e86ab',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                project_id INTEGER,
+                start_time TEXT NOT NULL,
+                end_time TEXT,
+                description TEXT,
+                status TEXT NOT NULL CHECK (
+                    status IN ('running','finished','cancelled')
+                ),
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS session_tags (
+                session_id INTEGER NOT NULL,
+                tag TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS app_session (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                user_id INTEGER NOT NULL
+            );
+            "
+        ).expect("failed to create schema");
+
+        Self {
+            conn: Mutex::new(conn),
+        }
+    }
+}
