@@ -206,8 +206,18 @@ pub fn logout_user(
     conn: &Connection,
 ) -> Result<(), String> {
 
-    conn.execute("DELETE FROM app_session WHERE id = 1", [])
-        .map_err(|e| e.to_string())?;
+    println!("[LOGOUT] Deleting app_session...");
+
+    let result = conn.execute(
+        "DELETE FROM app_session WHERE id = 1",
+        []
+    );
+
+    println!("[LOGOUT] DB result: {:?}", result);
+
+    result.map_err(|e| e.to_string())?;
+
+    println!("[LOGOUT] SUCCESS");
 
     Ok(())
 }

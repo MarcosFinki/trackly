@@ -140,14 +140,18 @@ pub fn logout_user_command(
     db: State<Database>,
 ) -> Result<(), String> {
 
+
+    let conn = db.conn.lock().unwrap();
+
+    user_service::logout_user(&conn)?;
+
     {
         let mut current = state.current_user_id.lock().unwrap();
         *current = None;
     }
 
-    let conn = db.conn.lock().unwrap();
 
-    user_service::logout_user(&conn)
+    Ok(())
 }
 
 /* ===========================
