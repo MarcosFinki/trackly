@@ -2,14 +2,8 @@ use tauri::{command, State};
 use serde::Deserialize;
 
 use crate::state::AppState;
-use crate::services::user_service::{
-    create_user,
-    login_user,
-    get_user_by_id,
-    update_user_profile_internal,
-    upload_avatar_internal,
-    logout_user,
-};
+use crate::db::Database;
+use crate::services::user_service;
 use crate::models::user::PublicUser;
 
 /* ===========================
@@ -42,6 +36,7 @@ pub struct UpdateProfileInput {
 
 #[command]
 pub fn register_user(
+    db: State<Database>,
     input: RegisterInput,
 ) -> Result<PublicUser, String> {
 
@@ -49,7 +44,10 @@ pub fn register_user(
         return Err("Password too short".into());
     }
 
-    create_user(
+    let conn = db.conn.lock().unwrap();
+
+    user_service::create_user(
+        &conn,
         &input.email.trim().to_lowercase(),
         &input.password,
     )
@@ -62,14 +60,24 @@ pub fn register_user(
 #[command]
 pub fn login(
     state: State<AppState>,
+    db: State<Database>,
     input: LoginInput,
 ) -> Result<PublicUser, String> {
 
-    login_user(
-        state,
+    let conn = db.conn.lock().unwrap();
+
+    let user = user_service::login_user(
+        &conn,
         &input.email.trim().to_lowercase(),
         &input.password,
-    )
+    )?;
+
+    {
+        let mut current = state.current_user_id.lock().unwrap();
+        *current = Some(user.id);
+    }
+
+    Ok(user.into())
 }
 
 /* ===========================
@@ -79,16 +87,18 @@ pub fn login(
 #[command]
 pub fn get_current_user(
     state: State<AppState>,
+    db: State<Database>,
 ) -> Result<PublicUser, String> {
 
-    let current = state.current_user_id.lock().unwrap();
+    let user_id = state
+        .current_user_id
+        .lock()
+        .unwrap()
+        .ok_or("Not authenticated")?;
 
-    let user_id = match *current {
-        Some(id) => id,
-        None => return Err("Not authenticated".into()),
-    };
+    let conn = db.conn.lock().unwrap();
 
-    get_user_by_id(user_id)
+    user_service::get_user_by_id(&conn, user_id)
 }
 
 /* ===========================
@@ -98,17 +108,20 @@ pub fn get_current_user(
 #[command]
 pub fn update_user_profile(
     state: State<AppState>,
+    db: State<Database>,
     input: UpdateProfileInput,
 ) -> Result<PublicUser, String> {
 
-    let current = state.current_user_id.lock().unwrap();
+    let user_id = state
+        .current_user_id
+        .lock()
+        .unwrap()
+        .ok_or("Not authenticated")?;
 
-    let user_id = match *current {
-        Some(id) => id,
-        None => return Err("Not authenticated".into()),
-    };
+    let conn = db.conn.lock().unwrap();
 
-    update_user_profile_internal(
+    user_service::update_user_profile(
+        &conn,
         user_id,
         input.display_name,
         input.email.map(|e| e.trim().to_lowercase()),
@@ -118,33 +131,49 @@ pub fn update_user_profile(
 }
 
 /* ===========================
-   AVATAR UPLOAD
-=========================== */
-
-#[command]
-pub fn upload_avatar(
-    app: tauri::AppHandle,
-    state: State<AppState>,
-    bytes: Vec<u8>,
-) -> Result<String, String> {
-
-    let current = state.current_user_id.lock().unwrap();
-
-    let user_id = match *current {
-        Some(id) => id,
-        None => return Err("Not authenticated".into()),
-    };
-
-    upload_avatar_internal(app, user_id, bytes)
-}
-
-/* ===========================
    LOGOUT
 =========================== */
 
 #[command]
 pub fn logout_user_command(
     state: State<AppState>,
+    db: State<Database>,
 ) -> Result<(), String> {
-    logout_user(state)
+
+    {
+        let mut current = state.current_user_id.lock().unwrap();
+        *current = None;
+    }
+
+    let conn = db.conn.lock().unwrap();
+
+    user_service::logout_user(&conn)
+}
+
+/* ===========================
+   UPLOAD AVATAR
+=========================== */
+
+#[command]
+pub fn upload_avatar(
+    app: tauri::AppHandle,
+    state: State<AppState>,
+    db: State<Database>,
+    bytes: Vec<u8>,
+) -> Result<String, String> {
+
+    let user_id = state
+        .current_user_id
+        .lock()
+        .unwrap()
+        .ok_or("Not authenticated")?;
+
+    let conn = db.conn.lock().unwrap();
+
+    user_service::upload_avatar(
+        &conn,
+        &app,
+        user_id,
+        bytes,
+    )
 }

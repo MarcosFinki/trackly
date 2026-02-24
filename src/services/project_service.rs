@@ -1,14 +1,14 @@
-use rusqlite::{params};
-use crate::db::get_db;
+use rusqlite::{params, Connection};
 use crate::models::project::{DbProject, Project};
 
 /* ===========================
    GET PROJECTS
 =========================== */
 
-pub fn get_projects(user_id: i64) -> Result<Vec<Project>, String> {
-    let db = get_db();
-    let conn = db.lock().unwrap();
+pub fn get_projects(
+    conn: &Connection,
+    user_id: i64,
+) -> Result<Vec<Project>, String> {
 
     let mut stmt = conn.prepare(
         "SELECT id, user_id, name, color
@@ -42,13 +42,11 @@ pub fn get_projects(user_id: i64) -> Result<Vec<Project>, String> {
 =========================== */
 
 pub fn create_project(
+    conn: &Connection,
     user_id: i64,
     name: &str,
     color: &str,
 ) -> Result<Project, String> {
-
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     conn.execute(
         "INSERT INTO projects (user_id, name, color)
@@ -71,14 +69,12 @@ pub fn create_project(
 =========================== */
 
 pub fn update_project(
+    conn: &Connection,
     user_id: i64,
     project_id: i64,
     name: Option<String>,
     color: Option<String>,
 ) -> Result<(), String> {
-
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     let mut fields = Vec::new();
     let mut values: Vec<&dyn rusqlite::ToSql> = Vec::new();
@@ -104,7 +100,7 @@ pub fn update_project(
 
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
 
-    let mut final_values: Vec<&dyn rusqlite::ToSql> = values;
+    let mut final_values = values;
     final_values.push(&project_id);
     final_values.push(&user_id);
 
@@ -123,12 +119,10 @@ pub fn update_project(
 =========================== */
 
 pub fn delete_project(
+    conn: &Connection,
     user_id: i64,
     project_id: i64,
 ) -> Result<(), String> {
-
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     let result = conn.execute(
         "DELETE FROM projects WHERE id = ?1 AND user_id = ?2",

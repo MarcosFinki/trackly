@@ -1,7 +1,6 @@
-use rusqlite::params;
+use rusqlite::{params, Connection};
 use chrono::Utc;
 
-use crate::db::get_db;
 use crate::models::session::{
     DbSession,
     ActiveSessionResponse,
@@ -14,10 +13,9 @@ use crate::models::session::{
 =========================== */
 
 pub fn get_active_session(
+    conn: &Connection,
     user_id: i64,
 ) -> Result<Option<ActiveSessionResponse>, String> {
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     let result = conn.query_row(
         "SELECT id, project_id, start_time, end_time, description, status
@@ -58,16 +56,14 @@ pub fn get_active_session(
 =========================== */
 
 pub fn start_session(
+    conn: &Connection,
     user_id: i64,
     project_id: Option<i64>,
 ) -> Result<ActiveSessionResponse, String> {
 
-    if get_active_session(user_id)?.is_some() {
+    if get_active_session(conn, user_id)?.is_some() {
         return Err("There is already an active session".into());
     }
-
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     let now = Utc::now().to_rfc3339();
 
@@ -95,26 +91,18 @@ pub fn start_session(
 =========================== */
 
 pub fn finalize_session(
+    conn: &mut Connection,
     user_id: i64,
     session_id: i64,
     description: String,
     tags: Vec<String>,
 ) -> Result<(), String> {
 
-    let db = get_db();
-    let mut conn = db.lock().unwrap();
-
-    let session = get_session_by_id(&conn, session_id)?;
+    let session = get_session_by_id(conn, session_id)?;
 
     if session.user_id != user_id || session.status != "running" {
         return Err("Invalid session state".into());
     }
-
-    println!(
-        "SESSION DB -> owner: {}, status: {}",
-        session.user_id,
-        session.status
-    );
 
     let now = Utc::now().to_rfc3339();
 
@@ -145,12 +133,6 @@ pub fn finalize_session(
         .map_err(|e| e.to_string())?;
     }
 
-    println!(
-        "SESSION DB -> owner: {}, status: {}",
-        session.user_id,
-        session.status
-    );
-
     tx.commit().map_err(|e| e.to_string())?;
 
     Ok(())
@@ -160,9 +142,10 @@ pub fn finalize_session(
    CANCEL SESSION
 =========================== */
 
-pub fn cancel_session(user_id: i64) -> Result<(), String> {
-    let db = get_db();
-    let conn = db.lock().unwrap();
+pub fn cancel_session(
+    conn: &Connection,
+    user_id: i64,
+) -> Result<(), String> {
 
     conn.execute(
         "UPDATE sessions
@@ -180,11 +163,9 @@ pub fn cancel_session(user_id: i64) -> Result<(), String> {
 =========================== */
 
 pub fn get_finished_sessions(
+    conn: &Connection,
     user_id: i64,
 ) -> Result<Vec<FinishedSessionResponse>, String> {
-
-    let db = get_db();
-    let conn = db.lock().unwrap();
 
     let mut stmt = conn.prepare(
         "SELECT id, project_id, start_time, end_time, description
@@ -243,7 +224,7 @@ pub fn get_finished_sessions(
 =========================== */
 
 fn get_session_by_id(
-    conn: &rusqlite::Connection,
+    conn: &Connection,
     id: i64,
 ) -> Result<DbSession, String> {
 

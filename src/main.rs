@@ -53,10 +53,15 @@ fn main() {
             current_user_id: Mutex::new(None),
         })
         .setup(|app| {
+            // Inicializar base de datos en el directorio correcto del sistema
+            let database = crate::db::Database::new(&app.handle());
+            app.manage(database);
+
+            // Restaurar sesión si existe
             let state = app.state::<AppState>();
 
-            let db = crate::db::get_db();
-            let conn = db.lock().unwrap();
+            let db = app.state::<crate::db::Database>();
+            let conn = db.conn.lock().unwrap();
 
             let result: Result<i64, _> = conn.query_row(
                 "SELECT user_id FROM app_session WHERE id = 1",
@@ -64,10 +69,15 @@ fn main() {
                 |row| row.get(0),
             );
 
-            if let Ok(user_id) = result {
-                let mut current = state.current_user_id.lock().unwrap();
-                *current = Some(user_id);
-                println!("SESSION RESTORED FOR USER {}", user_id);
+            match result {
+                Ok(user_id) => {
+                    let mut current = state.current_user_id.lock().unwrap();
+                    *current = Some(user_id);
+                    println!("SESSION RESTORED FOR USER {}", user_id);
+                }
+                Err(_) => {
+                    println!("NO PREVIOUS SESSION FOUND");
+                }
             }
 
             Ok(())
