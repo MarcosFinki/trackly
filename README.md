@@ -1,9 +1,10 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Tauri](https://img.shields.io/badge/Tauri-v2-blue)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 
 # Trackly
 
-Trackly is a minimal, native desktop time-tracking application built with **Tauri v2**, **Rust**, **Astro**, and **React**.
+Trackly is a minimal, native cross-platform desktop time-tracking application built with Tauri v2, Rust, Astro, and React.
 
 It is a local-first productivity tool focused on performance, simplicity, and privacy.
 
@@ -11,18 +12,30 @@ Unlike most time trackers, Trackly does not rely on cloud services. Everything r
 
 ---
 
+## 🖥️ Platforms
+
+Trackly is available for:
+
+- macOS (.dmg)
+- Windows (.msi)
+- Linux (.AppImage)
+
+All builds are automatically generated via GitHub Actions.
+
+---
+
 ## ✨ Features
 
-- ✅ Project-based time tracking
-- ✅ Start / Stop sessions
-- ✅ Cancel sessions
-- ✅ Session descriptions and tagging
-- ✅ 7-day and 30-day statistics
-- ✅ Tag-based activity breakdown
-- ✅ Avatar upload (image resizing & WebP compression)
-- ✅ Persistent login session
-- ✅ Local SQLite storage (no cloud, no telemetry)
-- ✅ Native desktop performance (via Tauri)
+- Project-based time tracking  
+- Start / Stop sessions  
+- Cancel sessions  
+- Session descriptions and tagging  
+- 7-day and 30-day statistics  
+- Tag-based activity breakdown  
+- Avatar upload (image resizing & WebP compression)  
+- Persistent login session  
+- Local SQLite storage (no cloud, no telemetry)  
+- Native desktop performance (via Tauri)  
 
 ---
 
@@ -30,30 +43,32 @@ Unlike most time trackers, Trackly does not rely on cloud services. Everything r
 
 Trackly is:
 
-- **Local-first** — your data stays on your machine.
-- **Fast** — powered by Rust and SQLite.
-- **Minimal** — focused on clarity and usability.
-- **Open source** — fully inspectable and modifiable.
+- Local-first — your data stays on your machine  
+- Fast — powered by Rust and SQLite  
+- Minimal — focused on clarity and usability  
+- Open source — fully inspectable and modifiable  
 
-No backend servers. No analytics. No external dependencies.
+No backend servers.  
+No analytics.  
+No telemetry.  
 
 ---
 
 ## 🏗 Tech Stack
 
 ### Frontend
-- Astro
-- React
-- TypeScript
-- CSS
+- Astro  
+- React  
+- TypeScript  
+- CSS  
 
 ### Backend
-- Rust
-- Tauri v2
-- SQLite (rusqlite)
-- Argon2 (password hashing)
-- Image processing (avatar resizing)
-- UUID
+- Rust  
+- Tauri v2  
+- SQLite (rusqlite)  
+- Argon2 (password hashing)  
+- Image processing (avatar resizing)  
+- UUID  
 
 ---
 
@@ -61,13 +76,14 @@ No backend servers. No analytics. No external dependencies.
 
 Trackly leverages Tauri to provide:
 
-- Native performance
-- Small bundle size
-- Secure Rust backend
-- Modern web frontend
-- Cross-platform capabilities
+- Native performance  
+- Small bundle size  
+- Secure Rust backend  
+- Modern web frontend  
+- Cross-platform builds  
+- Strong separation between UI and system layer  
 
-This allows the application to feel lightweight while maintaining a powerful architecture.
+This allows the application to remain lightweight while maintaining a robust architecture.
 
 ---
 
@@ -88,35 +104,64 @@ This allows the application to feel lightweight while maintaining a powerful arc
 
 Trackly stores all data locally using SQLite.
 
-On macOS, the database is located at:
+### Database locations
 
-~/Library/Application Support/com.marcos.trackly/trackly.db
+**macOS**
+
+    ~/Library/Application Support/com.marcos.trackly/trackly.db
+
+**Windows**
+
+    C:\Users\USERNAME\AppData\Roaming\com.marcos.trackly\trackly.db
+
+**Linux**
+
+    ~/.local/share/com.marcos.trackly/trackly.db
 
 The schema includes:
 
-- users
-- projects
-- sessions
-- session_tags
-- app_session
+- users  
+- projects  
+- sessions  
+- session_tags  
+- app_session  
 
-Passwords are hashed using Argon2.
+Passwords are securely hashed using Argon2.
 
 ---
 
 ## 🚀 Installation
 
-Download the latest release from the **Releases** section.
+Download the latest release from the Releases section.
 
 ### macOS
 
-1. Download the `.dmg`
-2. Move Trackly.app to Applications
+1. Download the .dmg  
+2. Move Trackly.app to Applications  
 3. If macOS blocks it:
-   - Right click → Open
-   - Confirm
+   - Right click → Open  
+   - Confirm  
 
-> Note: The app is not currently code-signed. macOS may require manual confirmation to open it.
+### Windows
+
+1. Download the .msi  
+2. Run installer  
+3. If SmartScreen appears:
+   - Click “More info”  
+   - Click “Run anyway”  
+
+### Linux
+
+1. Download the .AppImage  
+2. Make it executable:
+
+    chmod +x Trackly-x.x.x.AppImage
+
+3. Run it:
+
+    ./Trackly-x.x.x.AppImage
+
+Note: The app is not currently code-signed. Your system may show security warnings.
 
 ---
 
@@ -124,18 +169,18 @@ Download the latest release from the **Releases** section.
 
 ### Requirements
 
-- Node.js
-- Rust
-- Tauri CLI
+- Node.js  
+- Rust  
+- Tauri CLI  
 
 ### Run in development mode
 
-npm install
-npx tauri dev
+    npm install
+    npx tauri dev
 
 ### Build production bundle
 
-npx tauri build
+    npx tauri build
 
 ---
 
@@ -143,32 +188,31 @@ npx tauri build
 
 This is the initial public release (v0.1.0).
 
-The core features are stable, but the project is actively evolving.
+The core features are stable and production-ready, but the project is actively evolving.
 
 ---
 
 ## 📦 Project Structure
 
-trackly/       → Astro + React frontend
-src-tauri/     → Rust backend
+    trackly/       → Astro + React frontend  
+    src-tauri/     → Rust backend  
 
-The architecture follows a layered approach:
+Architecture layers:
 
-- Commands (Tauri layer)
-- Services (business logic)
-- Domain
-- Infrastructure (SQLite)
+- Commands (Tauri interface)  
+- Services (business logic)  
+- Domain models  
+- Infrastructure (SQLite)  
 
 ---
 
 ## 🔐 Security
 
-- Password hashing via Argon2
-- No plaintext storage
-- No external API calls
-- No telemetry
-- No tracking
-- Local-only data storage
+- Password hashing via Argon2  
+- No plaintext storage  
+- No external API calls  
+- No telemetry  
+- Fully local data ownership  
 
 ---
 
@@ -176,18 +220,21 @@ The architecture follows a layered approach:
 
 Planned improvements:
 
-- Database migrations
-- CSV export
-- Auto-updater
-- Dark mode
-- Improved analytics
-- Cross-platform builds (Windows / Linux)
+- Database migrations system  
+- CSV export  
+- Auto-updater  
+- Dark mode  
+- Improved analytics  
+- Code signing  
+- Installer polish  
 
 ---
 
 ## 📜 License
 
-MIT License.
+This project is licensed under the MIT License.
+
+See the LICENSE file for details.
 
 ---
 
@@ -197,12 +244,12 @@ Pull requests are welcome.
 
 If you'd like to contribute:
 
-1. Fork the repository
-2. Create a feature branch
-3. Open a PR
+1. Fork the repository  
+2. Create a feature branch  
+3. Open a PR  
 
 ---
 
 ## 👤 Author
 
-Built by Marcos Finkiel.
+Built by Marcos Finkielsztajn

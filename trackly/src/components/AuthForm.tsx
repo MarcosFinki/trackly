@@ -32,6 +32,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setLoading(true);
 
     try {
+      console.log("Auth attempt:", { email, mode });
+
       if (isLogin) {
         await login(email, password);
       } else {
@@ -39,20 +41,30 @@ export default function AuthForm({ mode }: AuthFormProps) {
       }
 
       window.location.href = "/";
-    } catch (err) {
-      if (err instanceof Error) {
-        switch (err.message) {
-          case "INVALID_CREDENTIALS":
-            setError("Invalid credentials");
-            break;
-          case "USER_EXISTS":
-            setError("User already exists");
-            break;
-          default:
-            setError(isLogin ? "Login failed" : "Registration failed");
-        }
-      } else {
-        setError("Unexpected error");
+    } catch (err: any) {
+      console.error("AUTH ERROR:", err);
+
+      const message =
+        typeof err === "string"
+          ? err
+          : err?.message
+          ? err.message
+          : JSON.stringify(err);
+
+      switch (message) {
+        case "Invalid email or password":
+        case "INVALID_CREDENTIALS":
+          setError("Invalid credentials");
+          break;
+
+        case "User already exists":
+        case "USER_EXISTS":
+          setError("User already exists");
+          break;
+
+        default:
+          // 🔥 Mostrar error real en fase debugging
+          setError(message || "Unexpected error");
       }
     } finally {
       setLoading(false);
