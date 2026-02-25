@@ -186,7 +186,7 @@ Note: The app is not currently code-signed. Your system may show security warnin
 
 ## 📌 Current Status
 
-This is the initial public release (v0.1.0).
+This is the first stable public release (v1.0.0).
 
 The core features are stable and production-ready, but the project is actively evolving.
 
